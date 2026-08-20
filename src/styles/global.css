@@ -864,14 +864,16 @@ input::placeholder { color: var(--text-faint); }
   margin-top: 20px;
 }
 
+/* Toda acción de confirmar usa el mismo verde y texto blanco: guardar,
+   agregar producto, aceptar un diálogo, iniciar evento. */
 .dlg-btn {
   padding: 16px 10px;
   border-radius: var(--r-md);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 16px;
-  background: var(--cyan);
-  color: var(--on-color);
+  background: var(--green);
+  color: var(--text);
 }
 
 .dlg-btn.ghost { background: var(--surface-2); color: var(--text-dim); }
@@ -1003,8 +1005,8 @@ input::placeholder { color: var(--text-faint); }
   gap: 8px;
   padding: 16px;
   border-radius: var(--r-md);
-  background: var(--cyan);
-  color: var(--on-color);
+  background: var(--green);
+  color: var(--text);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 16px;
