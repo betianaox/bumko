@@ -1,51 +1,81 @@
 rules_version = '2';
 
+/* Cada bar es una cuenta cerrada: sus productos, ventas, eventos y equipo
+   cuelgan de bares/{barId} y nadie de otro bar puede leerlos ni tocarlos.
+   usuarios/{email} es el índice que dice a qué bar entra cada persona.
+
+   Cuando exista la app nativa, comparte esta misma base: lo único que cambia
+   es que cada quien que la instale crea su propio bar. */
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function myDoc() {
-      return get(/databases/$(database)/documents/equipo_autorizado/$(request.auth.token.email)).data;
+    function yo() {
+      return request.auth.token.email;
     }
 
-    function isTeamMember() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/equipo_autorizado/$(request.auth.token.email)) &&
-        myDoc().active != false;
+    function miembroDe(barId) {
+      return get(/databases/$(database)/documents/bares/$(barId)/equipo/$(yo())).data;
     }
 
-    function isAdmin() {
-      return isTeamMember() && myDoc().role == 'admin';
+    function esDelBar(barId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/bares/$(barId)/equipo/$(yo()))
+        && miembroDe(barId).active != false;
     }
 
-    match /equipo_autorizado/{email} {
-      allow read: if request.auth != null;
-
-      // Cada uno se registra a sí mismo la primera vez que entra, y siempre
-      // como staff: nadie puede darse de alta directamente como admin.
-      allow create: if request.auth != null
-        && request.auth.token.email == email
-        && request.resource.data.role == 'staff'
-        && request.resource.data.email == email;
-
-      // Cambiar roles o cortar accesos es solo de admin.
-      allow update, delete: if isAdmin();
+    function esAdminDe(barId) {
+      return esDelBar(barId) && miembroDe(barId).role == 'admin';
     }
 
-    match /products/{productId} {
-      allow read, write: if isTeamMember();
+    // Índice de personas. Cada uno puede leer el suyo para saber a qué bar
+    // entrar; escribirlo es cosa del admin que invita.
+    match /usuarios/{email} {
+      allow read: if request.auth != null && yo() == email;
+      allow write: if request.auth != null
+        && esAdminDe(request.resource.data.get('barId', resource.data.barId));
     }
 
-    match /sales/{saleId} {
-      allow read, write: if isTeamMember();
-    }
+    match /bares/{barId} {
+      allow read: if esDelBar(barId);
+      allow update, delete: if esAdminDe(barId);
+      // Crear un bar es hacerse dueño: solo para uno mismo.
+      allow create: if request.auth != null && request.resource.data.ownerEmail == yo();
 
-    match /events/{eventId} {
-      allow read, write: if isTeamMember();
-    }
+      match /equipo/{email} {
+        allow read: if esDelBar(barId);
+        allow write: if esAdminDe(barId);
+      }
 
-    // Config compartida del bar (por ahora, la caja con la que se arranca)
-    match /settings/{docId} {
-      allow read, write: if isTeamMember();
+      // Cargar, editar y borrar productos es del admin. El staff solo puede
+      // mover el stock, que es lo que pasa con cada venta y cada deshacer:
+      // si toca cualquier otro campo (el precio, por ejemplo), se rechaza.
+      match /products/{id} {
+        allow read: if esDelBar(barId);
+        allow create, delete: if esAdminDe(barId);
+        allow update: if esAdminDe(barId)
+          || (esDelBar(barId)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']));
+      }
+
+      // Vender es lo único que el staff puede escribir. Puede borrar una
+      // venta propia — es el "deshacer" — pero no las del resto.
+      match /sales/{id} {
+        allow read: if esDelBar(barId);
+        allow create: if esDelBar(barId) && request.resource.data.userEmail == yo();
+        allow delete: if esAdminDe(barId) || (esDelBar(barId) && resource.data.userEmail == yo());
+        allow update: if esAdminDe(barId);
+      }
+
+      match /events/{id} {
+        allow read: if esDelBar(barId);
+        allow write: if esAdminDe(barId);
+      }
+
+      match /settings/{id} {
+        allow read: if esDelBar(barId);
+        allow write: if esAdminDe(barId);
+      }
     }
   }
 }

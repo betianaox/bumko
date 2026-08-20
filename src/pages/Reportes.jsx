@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { collection, onSnapshot, query, orderBy } from '../data'
-import { db } from '../firebase'
+import { onSnapshot, query, orderBy } from '../data'
+import { useAuth } from '../context/AuthContext'
+import { barCol } from '../bar'
 import Picker from '../components/Picker'
 
 // "Por evento" dejó de ser una agrupación: ahora el evento es un filtro más,
@@ -64,6 +65,7 @@ const mesActual = () => {
 }
 
 export default function Reportes() {
+  const { barId } = useAuth()
   const [sales, setSales] = useState([])
   const [events, setEvents] = useState([])
   const [mode, setMode] = useState('dia')
@@ -72,14 +74,16 @@ export default function Reportes() {
   const [eventId, setEventId] = useState('')   // '' = no filtra por evento
 
   useEffect(() => {
-    const q = query(collection(db, 'sales'), orderBy('createdAt', 'desc'))
+    if (!barId) return
+    const q = query(barCol(barId, 'sales'), orderBy('createdAt', 'desc'))
     return onSnapshot(q, (snap) => setSales(snap.docs.map((d) => d.data())))
-  }, [])
+  }, [barId])
 
   useEffect(() => {
-    const q = query(collection(db, 'events'), orderBy('startedAt', 'desc'))
+    if (!barId) return
+    const q = query(barCol(barId, 'events'), orderBy('startedAt', 'desc'))
     return onSnapshot(q, (snap) => setEvents(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-  }, [])
+  }, [barId])
 
   // El filtro corre sobre la fecha real de la venta, incluso cuando estás
   // mirando por evento: "el finde pasado, evento por evento" es una pregunta válida.

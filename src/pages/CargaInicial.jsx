@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  collection, onSnapshot, query, orderBy, addDoc, doc, setDoc,
+  onSnapshot, query, orderBy, addDoc, setDoc,
   updateDoc, deleteDoc, increment,
 } from '../data'
-import { db } from '../firebase'
+import { barCol, barDoc } from '../bar'
 import { toneOf } from '../productTone'
 import TonePicker from '../components/TonePicker'
 import Dialog from '../components/Dialog'
@@ -14,7 +14,7 @@ import { resetDemoData } from '../demo/mockDb'
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
 
 export default function CargaInicial({ activeEvent }) {
-  const { demo } = useAuth()
+  const { demo, barId } = useAuth()
   const [products, setProducts] = useState([])
   const [name, setName] = useState('')
   const [cost, setCost] = useState('')
@@ -29,17 +29,19 @@ export default function CargaInicial({ activeEvent }) {
   const [savedCash, setSavedCash] = useState(0)   // caja guardada para la próxima noche
 
   useEffect(() => {
-    const q = query(collection(db, 'products'), orderBy('name'))
+    if (!barId) return
+    const q = query(barCol(barId, 'products'), orderBy('name'))
     return onSnapshot(q, (snap) => setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-  }, [])
+  }, [barId])
 
   // Sin evento en curso la caja queda guardada acá y la toma el próximo evento.
   useEffect(() => {
-    return onSnapshot(collection(db, 'settings'), (snap) => {
+    if (!barId) return
+    return onSnapshot(barCol(barId, 'settings'), (snap) => {
       const s = snap.docs.find((d) => d.id === 'caja')
       setSavedCash(s ? s.data().openingCash || 0 : 0)
     })
-  }, [])
+  }, [barId])
 
   const cajaActual = activeEvent ? (activeEvent.openingCash || 0) : savedCash
 
@@ -47,9 +49,9 @@ export default function CargaInicial({ activeEvent }) {
     const n = cash === '' ? 0 : Number(cash)
     if (Number.isNaN(n)) return
     if (activeEvent) {
-      await updateDoc(doc(db, 'events', activeEvent.id), { openingCash: n })
+      await updateDoc(barDoc(barId, 'events', activeEvent.id), { openingCash: n })
     } else {
-      await setDoc(doc(db, 'settings', 'caja'), { openingCash: n }, { merge: true })
+      await setDoc(barDoc(barId, 'settings', 'caja'), { openingCash: n }, { merge: true })
     }
     setCash('')
   }
@@ -58,7 +60,7 @@ export default function CargaInicial({ activeEvent }) {
 
   const handleAdd = async () => {
     if (!canAdd) return
-    await addDoc(collection(db, 'products'), {
+    await addDoc(barCol(barId, 'products'), {
       name: name.trim(),
       costPrice: cost === '' ? 0 : Number(cost),
       salePrice: Number(price),
@@ -76,17 +78,17 @@ export default function CargaInicial({ activeEvent }) {
     if (value === '' || Number.isNaN(n)) return
     // increment y no stock + n: si otro está vendiendo al mismo tiempo, sumar
     // sobre el número que leímos hace un rato le pisaría las ventas.
-    await updateDoc(doc(db, 'products', p.id), { stock: increment(n) })
+    await updateDoc(barDoc(barId, 'products', p.id), { stock: increment(n) })
   }
 
   const handleDelete = async () => {
     const p = dialog.product
     setDialog(null)
-    await deleteDoc(doc(db, 'products', p.id))
+    await deleteDoc(barDoc(barId, 'products', p.id))
   }
 
   const handleTone = async (p, t) => {
-    await updateDoc(doc(db, 'products', p.id), { tone: t })
+    await updateDoc(barDoc(barId, 'products', p.id), { tone: t })
     setEditingTone(null)
   }
 

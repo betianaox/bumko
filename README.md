@@ -29,25 +29,53 @@ npm run dev
 
 Se abre en `http://localhost:5173`.
 
-## 4. Crearte como el primer admin
+## 4. Crear tu bar y tu usuario admin
 
-El resto del equipo se registra solo: cualquiera que entre con Google queda
-guardado en `equipo_autorizado` con rol `staff`. Pero el **primer admin** no
-puede crearse desde la app — nadie puede darse permisos a sí mismo —, así que
-va a mano una única vez:
+### Cómo están guardados los datos
 
-1. Andá a Firestore Database en la consola de Firebase → **Iniciar colección**.
-2. ID de la colección: `equipo_autorizado`.
-3. ID del documento: **tu email de Google, todo en minúscula** (ej. `tunombre@gmail.com`).
-4. Agregale estos campos:
-   - `email` (string) → tu mismo email
+Todo lo que produce un bar cuelga de su propio documento, y no de colecciones
+sueltas. Esto es lo que permite que mañana convivan varios bares en la misma
+base — cada uno ve solo lo suyo — y que la app nativa use exactamente estos
+mismos datos sin migrar nada:
+
+```
+bares/{barId}
+  ├─ equipo/{email}      quién trabaja acá y con qué rol
+  ├─ products/{id}
+  ├─ sales/{id}
+  ├─ events/{id}
+  └─ settings/caja
+
+usuarios/{email} → { barId }    índice: a qué bar entra cada persona
+```
+
+### El primer bar va a mano
+
+El primer admin no puede crearse desde la app — nadie puede darse permisos a
+sí mismo —, así que se hace una vez desde la consola de Firebase:
+
+1. **Firestore Database → Iniciar colección** → ID de colección: `bares`
+2. ID del documento: elegí uno corto, ej. `casa` (va a ser tu `barId`).
+   Campos: `name` (string, el nombre del bar) y `ownerEmail` (string, tu mail).
+3. Adentro de ese documento → **Iniciar colección** → ID: `equipo`
+4. ID del documento: **tu mail de Google en minúscula**. Campos:
+   - `email` (string) → tu mismo mail
    - `name` (string) → tu nombre
    - `role` (string) → `admin`
    - `active` (boolean) → `true`
-5. Guardar.
+5. Volvé a la raíz → **Iniciar colección** → ID: `usuarios`
+6. ID del documento: **tu mail** otra vez. Campo: `barId` (string) → `casa`
 
-Desde ahí, entrás con Google y ya podés gestionar al resto desde la pestaña
-**Equipo**: cambiar a alguien de staff a admin, suspenderlo o sacarlo.
+Ahora entrás con Google y ya estás adentro de tu bar.
+
+### Sumar al resto del equipo
+
+Desde la pestaña **Equipo**: escribís el mail de Google de la persona y tocás
+**Invitar**. Cuando entre con esa misma cuenta, cae directo en tu bar como
+staff. Desde ahí la podés pasar a admin, suspenderla o sacarla.
+
+Nadie se registra solo: un mail que no fue invitado entra a la pantalla de
+login y le dice que pida que lo inviten.
 
 ### Qué puede hacer cada rol
 

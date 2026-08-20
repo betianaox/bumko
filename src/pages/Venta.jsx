@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  collection, onSnapshot, query, orderBy, addDoc, doc, updateDoc,
+  onSnapshot, query, orderBy, addDoc, updateDoc,
   increment, serverTimestamp, deleteDoc,
 } from '../data'
-import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import { barCol, barDoc } from '../bar'
 import SaleModal from '../components/SaleModal'
 import { toneOf } from '../productTone'
 
@@ -18,7 +18,7 @@ function buzz(pattern) {
 }
 
 export default function Venta({ activeEvent }) {
-  const { user } = useAuth()
+  const { user, barId } = useAuth()
   const [products, setProducts] = useState([])
   const [selected, setSelected] = useState(null)
   const [recent, setRecent] = useState([])
@@ -29,11 +29,12 @@ export default function Venta({ activeEvent }) {
   const longFired = useRef(false)
 
   useEffect(() => {
-    const q = query(collection(db, 'products'), orderBy('name'))
+    if (!barId) return
+    const q = query(barCol(barId, 'products'), orderBy('name'))
     return onSnapshot(q, (snap) => {
       setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
-  }, [])
+  }, [barId])
 
   // Los movimientos viejos se caen solos: deshacer algo de hace 5 minutos es peor que no deshacerlo
   useEffect(() => {
@@ -63,9 +64,9 @@ export default function Venta({ activeEvent }) {
     flash(product.id, saleData.mode === 'gift' ? 'REGALO' : '−1')
 
     // El stock primero: es lo que ve el resto del equipo en sus pantallas
-    await updateDoc(doc(db, 'products', product.id), { stock: increment(-1) })
+    await updateDoc(barDoc(barId, 'products', product.id), { stock: increment(-1) })
 
-    const saleDoc = await addDoc(collection(db, 'sales'), {
+    const saleDoc = await addDoc(barCol(barId, 'sales'), {
       productId: product.id,
       productName: product.name,
       mode: saleData.mode,
@@ -108,8 +109,8 @@ export default function Venta({ activeEvent }) {
     setConfirmUndo(null)
     setRecent((prev) => prev.filter((r) => r.saleId !== entry.saleId))
     buzz([20, 40, 20])
-    await updateDoc(doc(db, 'products', entry.productId), { stock: increment(1) })
-    await deleteDoc(doc(db, 'sales', entry.saleId))
+    await updateDoc(barDoc(barId, 'products', entry.productId), { stock: increment(1) })
+    await deleteDoc(barDoc(barId, 'sales', entry.saleId))
   }
 
   const startPress = (product) => {

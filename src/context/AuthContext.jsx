@@ -1,7 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut as fbSignOut } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from '../data'
-import { auth, googleProvider, db, DEMO } from '../firebase'
+import { getDoc } from '../data'
+import { auth, googleProvider, DEMO } from '../firebase'
+import { barDoc, usuarioDoc } from '../bar'
+import { DEMO_BAR } from '../demo/mockDb'
+
+/* Quién entra, a qué bar, y con qué rol.
+
+   Al iniciar sesión se resuelve en dos pasos:
+     usuarios/{email}             -> a qué bar pertenece
+     bares/{barId}/equipo/{email} -> su rol y si sigue habilitado
+
+   Sin el primero, la persona no pertenece a ningún bar: la app no la deja
+   pasar y le dice que pida que la inviten. Nadie se agrega solo, porque
+   agregarse solo significaría meterse en el bar de otro. */
 
 const AuthContext = createContext(null)
 
@@ -15,11 +27,13 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(DEMO ? DEMO_USER : null)
   const [authorized, setAuthorized] = useState(DEMO)
   const [role, setRole] = useState(DEMO ? 'admin' : null)
+  const [barId, setBarId] = useState(DEMO ? DEMO_BAR : null)
+  const [loading, setLoading] = useState(!DEMO)
+  const [error, setError] = useState('')
+
   // Solo en demo: mirar la app como si fueras staff, para probar los permisos.
   // No se guarda en ningún lado; recargando volvés a admin.
   const [verComoStaff, setVerComoStaff] = useState(false)
-  const [loading, setLoading] = useState(!DEMO)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     // En modo demo no hay login: entrás directo para poder ver la app.
@@ -31,35 +45,37 @@ export function AuthProvider({ children }) {
         setUser(null)
         setAuthorized(false)
         setRole(null)
+        setBarId(null)
         setLoading(false)
         return
       }
+
       try {
         const email = fbUser.email.toLowerCase()
-        const ref = doc(db, 'equipo_autorizado', email)
-        let snap = await getDoc(ref)
+        const indice = await getDoc(usuarioDoc(email))
 
-        // Primera vez que entra: se registra solo, siempre como staff.
-        // Un admin después lo promueve o le corta el acceso desde Usuarios.
-        if (!snap.exists()) {
-          await setDoc(ref, {
-            email,
-            name: fbUser.displayName || email,
-            role: 'staff',
-            active: true,
-            createdAt: serverTimestamp(),
-          })
-          snap = await getDoc(ref)
+        if (!indice.exists()) {
+          // Entró con Google pero nadie la invitó a ningún bar
+          setUser(fbUser)
+          setAuthorized(false)
+          setBarId(null)
+          setLoading(false)
+          return
         }
 
-        const data = snap.data() || {}
+        const bar = indice.data().barId
+        const miembro = await getDoc(barDoc(bar, 'equipo', email))
+        const data = miembro.exists() ? miembro.data() : {}
+
         setUser({ ...fbUser, teamData: data })
+        setBarId(bar)
         setRole(data.role || 'staff')
-        setAuthorized(data.active !== false)   // suspendido = entra pero no pasa
+        setAuthorized(miembro.exists() && data.active !== false)
       } catch (e) {
         console.error(e)
         setUser(fbUser)
         setAuthorized(false)
+        setBarId(null)
         setRole(null)
       }
       setLoading(false)
@@ -85,6 +101,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        barId,
         authorized,
         role: verComoStaff ? 'staff' : role,
         isAdmin: role === 'admin' && !verComoStaff,

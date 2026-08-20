@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
-import { collection, onSnapshot, doc, updateDoc, deleteDoc } from '../data'
-import { db } from '../firebase'
+import { onSnapshot, updateDoc, deleteDoc, setDoc, serverTimestamp } from '../data'
 import { useAuth } from '../context/AuthContext'
+import { barCol, barDoc, usuarioDoc } from '../bar'
 import Dialog from '../components/Dialog'
 import Switch from '../components/Switch'
 import { TrashIcon } from '../components/icons'
 
-/* Quién puede usar la app. Cada persona que entra con Google queda registrada
-   sola como staff; desde acá un admin le cambia el rol o le corta el acceso.
-   Las restricciones concretas del staff todavía no están aplicadas: por ahora
-   el rol se guarda, se muestra y se edita. */
+/* Quién trabaja en este bar. El admin invita por mail; esa persona entra con
+   su cuenta de Google y ya queda adentro, como staff. Nadie se suma solo:
+   sumarse solo sería meterse en el bar de otro. */
 
 const ROLES = [
   { id: 'admin', label: 'Admin' },
@@ -25,29 +24,49 @@ function fecha(ts) {
 }
 
 export default function Usuarios() {
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin, barId } = useAuth()
   const [users, setUsers] = useState([])
   const [dialog, setDialog] = useState(null)
+  const [nuevo, setNuevo] = useState('')
 
   useEffect(() => {
-    return onSnapshot(collection(db, 'equipo_autorizado'), (snap) => {
+    if (!barId) return
+    return onSnapshot(barCol(barId, 'equipo'), (snap) => {
       setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
-  }, [])
+  }, [barId])
 
   const setRole = async (u, role) => {
     if (u.role === role) return
-    await updateDoc(doc(db, 'equipo_autorizado', u.id), { role })
+    await updateDoc(barDoc(barId, 'equipo', u.id), { role })
   }
 
   const toggleActive = async (u) => {
-    await updateDoc(doc(db, 'equipo_autorizado', u.id), { active: u.active === false })
+    await updateDoc(barDoc(barId, 'equipo', u.id), { active: u.active === false })
+  }
+
+  // Invitar es anotar el mail: cuando esa persona entre con Google, la app
+  // lo encuentra y la deja pasar a este bar. Sin esto no entra a ningún lado.
+  const handleInvite = async () => {
+    const email = nuevo.trim().toLowerCase()
+    if (!email.includes('@')) return
+    await setDoc(barDoc(barId, 'equipo', email), {
+      email,
+      name: email.split('@')[0],
+      role: 'staff',
+      active: true,
+      createdAt: serverTimestamp(),
+    })
+    await setDoc(usuarioDoc(email), { barId })
+    setNuevo('')
   }
 
   const handleRemove = async () => {
     const u = dialog.user
     setDialog(null)
-    await deleteDoc(doc(db, 'equipo_autorizado', u.id))
+    await deleteDoc(barDoc(barId, 'equipo', u.id))
+    // También del índice, si no queda apuntando a un bar donde ya no está
+    await deleteDoc(usuarioDoc(u.id))
   }
 
   const admins = users.filter((u) => u.role === 'admin').length
@@ -63,7 +82,29 @@ export default function Usuarios() {
 
       {!isAdmin && (
         <div className="notice">
-          Solo un admin puede cambiar roles o dar de baja. Vos entrás como staff.
+          Solo un admin puede invitar gente, cambiar roles o dar de baja.
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="form-card">
+          <div className="form-row" style={{ marginBottom: 0 }}>
+            <input
+              type="email"
+              inputMode="email"
+              placeholder="Mail de Google de quien se suma"
+              value={nuevo}
+              onChange={(e) => setNuevo(e.target.value)}
+            />
+            <button
+              className="btn-primary"
+              style={{ width: 'auto', padding: '0 22px', marginTop: 0 }}
+              disabled={!nuevo.includes('@')}
+              onClick={handleInvite}
+            >
+              Invitar
+            </button>
+          </div>
         </div>
       )}
 
@@ -119,14 +160,14 @@ export default function Usuarios() {
         })}
 
         {users.length === 0 && (
-          <div className="empty-state">Todavía no entró nadie con su cuenta de Google.</div>
+          <div className="empty-state">Todavía no invitaste a nadie.</div>
         )}
       </div>
 
       {dialog && (
         <Dialog
           title={`¿Sacar a ${dialog.user.name || dialog.user.email}?`}
-          sub="Pierde el acceso a la app. Si vuelve a entrar con Google se registra de nuevo como staff."
+          sub="Pierde el acceso al bar. Para que vuelva, hay que invitarla de nuevo."
           confirmLabel="Sacar del equipo"
           danger
           onConfirm={handleRemove}

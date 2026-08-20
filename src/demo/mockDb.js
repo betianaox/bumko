@@ -6,7 +6,7 @@
    ============================================================ */
 
 // Subir el número descarta lo guardado en el navegador y vuelve a sembrar.
-const STORAGE_KEY = 'bumko-demo-db-v1'
+const STORAGE_KEY = 'bumko-demo-db-v2'
 
 // ---------- Timestamps ----------
 // Firestore devuelve objetos con .toDate(); acá lo replicamos.
@@ -49,12 +49,32 @@ const SEED_TEAM = {
   'pedro@bumko.app': { email: 'pedro@bumko.app', name: 'Pedro Molina', role: 'staff', active: false },
 }
 
+// El bar de la demo. Todo cuelga de acá, igual que en Firestore.
+export const DEMO_BAR = 'bar-demo'
+
+const bajo = (sub) => `bares/${DEMO_BAR}/${sub}`
+
 function freshStore() {
-  const products = {}
-  SEED_PRODUCTS.forEach((p, i) => { products[`demo-p${i}`] = { ...p } })
-  const equipo_autorizado = {}
-  for (const [id, u] of Object.entries(SEED_TEAM)) equipo_autorizado[id] = { ...u }
-  return { products, sales: {}, events: {}, equipo_autorizado }
+  const store = {
+    bares: { [DEMO_BAR]: { name: 'Bar de ejemplo', ownerEmail: 'demo@bumko.app' } },
+    usuarios: {},
+    [bajo('products')]: {},
+    [bajo('sales')]: {},
+    [bajo('events')]: {},
+    [bajo('settings')]: {},
+    [bajo('equipo')]: {},
+  }
+
+  SEED_PRODUCTS.forEach((p, i) => {
+    store[bajo('products')][`demo-p${i}`] = { ...p }
+  })
+
+  for (const [id, u] of Object.entries(SEED_TEAM)) {
+    store[bajo('equipo')][id] = { ...u }
+    store.usuarios[id] = { barId: DEMO_BAR }
+  }
+
+  return store
 }
 
 function load() {
@@ -74,7 +94,8 @@ function persist() {
 export function resetDemoData() {
   store = freshStore()
   persist()
-  notify('products'); notify('sales'); notify('events'); notify('equipo_autorizado')
+  // Avisa a todo el que esté escuchando, sea cual sea la colección
+  listeners.forEach((l) => l.run())
 }
 
 // ---------- Suscripciones ----------
@@ -87,8 +108,16 @@ function notify(col) {
 
 // ---------- Referencias y constraints ----------
 
-export const collection = (_db, name) => ({ __col: name })
-export const doc = (_db, name, id) => ({ __col: name, __id: id })
+/* Rutas anidadas, igual que Firestore: collection(db, 'bares', id, 'products')
+   y doc(db, 'bares', id, 'products', prodId). Acá la ruta de la colección se
+   guarda como una clave plana ('bares/xxx/products'), que para una base falsa
+   alcanza y sobra. */
+export const collection = (_db, ...segs) => ({ __col: segs.join('/') })
+
+export const doc = (_db, ...segs) => ({
+  __col: segs.slice(0, -1).join('/'),
+  __id: segs[segs.length - 1],
+})
 
 export const orderBy = (field, dir = 'asc') => ({ __c: 'orderBy', field, dir })
 export const where = (field, op, value) => ({ __c: 'where', field, op, value })

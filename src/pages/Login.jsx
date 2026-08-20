@@ -12,8 +12,9 @@ export default function Login() {
       {!loading && (user && !authorized ? (
         <>
           <p className="login-sub">
-            Entraste como <strong>{user.email}</strong>, pero todavía no estás
-            habilitado en el equipo. Pedile a un admin que te agregue.
+            Entraste como <strong>{user.email}</strong>, pero ese mail todavía no
+            está en ningún bar. Pedile a quien administra el tuyo que te invite
+            con esa misma dirección.
           </p>
           <button className="google-btn" onClick={signOut}>Probar con otra cuenta</button>
         </>

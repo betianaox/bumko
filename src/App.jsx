@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import { collection, onSnapshot, query, where, limit } from './data'
-import { db } from './firebase'
+import { onSnapshot, query, where, limit } from './data'
+import { barCol } from './bar'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Nav from './components/Nav'
@@ -19,17 +19,17 @@ function SoloAdmin({ isAdmin }) {
 }
 
 export default function App() {
-  const { authorized, loading, isAdmin } = useAuth()
+  const { authorized, loading, isAdmin, barId } = useAuth()
   const [activeEvent, setActiveEvent] = useState(null)
 
   useEffect(() => {
-    if (!authorized) return
-    const q = query(collection(db, 'events'), where('status', '==', 'live'), limit(1))
+    if (!authorized || !barId) return
+    const q = query(barCol(barId, 'events'), where('status', '==', 'live'), limit(1))
     return onSnapshot(q, (snap) => {
       if (snap.empty) setActiveEvent(null)
       else setActiveEvent({ id: snap.docs[0].id, ...snap.docs[0].data() })
     })
-  }, [authorized])
+  }, [authorized, barId])
 
   if (loading) return null
   if (!authorized) return <Login />

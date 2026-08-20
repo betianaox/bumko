@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { collection, onSnapshot, query, orderBy, addDoc, doc, updateDoc, serverTimestamp, where } from '../data'
-import { db } from '../firebase'
+import { onSnapshot, query, orderBy, addDoc, updateDoc, serverTimestamp, where } from '../data'
+import { useAuth } from '../context/AuthContext'
+import { barCol, barDoc } from '../bar'
 import Dialog from '../components/Dialog'
 
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
 
 export default function Eventos({ activeEvent }) {
+  const { barId } = useAuth()
   const [events, setEvents] = useState([])
   const [newName, setNewName] = useState('')
   const [openingCash, setOpeningCash] = useState('')
@@ -15,27 +17,29 @@ export default function Eventos({ activeEvent }) {
   const [savedCash, setSavedCash] = useState(0)
 
   useEffect(() => {
-    const q = query(collection(db, 'events'), orderBy('startedAt', 'desc'))
+    if (!barId) return
+    const q = query(barCol(barId, 'events'), orderBy('startedAt', 'desc'))
     return onSnapshot(q, (snap) => setEvents(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-  }, [])
+  }, [barId])
 
   useEffect(() => {
-    if (!activeEvent) { setLiveSales([]); return }
-    const q = query(collection(db, 'sales'), where('eventId', '==', activeEvent.id))
+    if (!activeEvent || !barId) { setLiveSales([]); return }
+    const q = query(barCol(barId, 'sales'), where('eventId', '==', activeEvent.id))
     return onSnapshot(q, (snap) => setLiveSales(snap.docs.map((d) => d.data())))
-  }, [activeEvent])
+  }, [activeEvent, barId])
 
   // La caja que se dejó cargada desde Stock es el valor por defecto de la noche.
   useEffect(() => {
-    return onSnapshot(collection(db, 'settings'), (snap) => {
+    if (!barId) return
+    return onSnapshot(barCol(barId, 'settings'), (snap) => {
       const s = snap.docs.find((d) => d.id === 'caja')
       setSavedCash(s ? s.data().openingCash || 0 : 0)
     })
-  }, [])
+  }, [barId])
 
   const handleStart = async () => {
     const name = newName.trim() || `Evento ${new Date().toLocaleDateString('es-AR')}`
-    await addDoc(collection(db, 'events'), {
+    await addDoc(barCol(barId, 'events'), {
       name,
       status: 'live',
       // Lo que hay en la caja antes de vender nada: sin esto, al cerrar
@@ -51,7 +55,7 @@ export default function Eventos({ activeEvent }) {
   const handleStop = async () => {
     if (!activeEvent) return
     setConfirmStop(false)
-    await updateDoc(doc(db, 'events', activeEvent.id), {
+    await updateDoc(barDoc(barId, 'events', activeEvent.id), {
       status: 'closed',
       endedAt: serverTimestamp(),
       expectedCash: esperado,   // lo que tendría que haber en la caja al cerrar
@@ -59,7 +63,7 @@ export default function Eventos({ activeEvent }) {
   }
 
   const handleSaveCash = async () => {
-    await updateDoc(doc(db, 'events', activeEvent.id), {
+    await updateDoc(barDoc(barId, 'events', activeEvent.id), {
       openingCash: editingCash === '' ? 0 : Number(editingCash),
     })
     setEditingCash(null)
