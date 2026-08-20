@@ -6,29 +6,40 @@
    antes de leer, y la navegación abajo al alcance del pulgar.
    ============================================================ */
 
-:root {
-  --bg: #0b0b10;
-  --surface: #16161f;
-  --surface-2: #1e1e2a;
-  --surface-3: #2a2a38;
-  --line: #2c2c3a;
+/* ------------------------------------------------------------
+   TOKENS
 
-  --text: #ffffff;
-  --text-dim: #a0a0b8;
-  --text-faint: #6b6b85;
-  --on-color: #0b0b10;   /* texto sobre los colores planos */
+   Nada de color suelto en las reglas de más abajo: todo sale de acá.
+   Hay dos paletas — oscura y clara — y cada regla usa el mismo nombre
+   en las dos, así agregar o corregir un color se hace en un solo lugar.
+
+   El tema activo lo marca `data-theme` en el <html>, que pone
+   ThemeContext (y un script en index.html antes del primer pintado
+   para que no haya destello del tema equivocado).
+
+   Los nombres dicen para qué sirve el color, no de qué color es:
+     bg / surface / surface-2 / surface-3   fondos, del más al menos hundido
+     line                                   separadores
+     text / text-dim / text-faint           texto, del más al menos importante
+     invert-bg / invert-ink                 el par que se da vuelta entre temas
+     on-color                               texto sobre cyan y ámbar
+   ------------------------------------------------------------ */
+
+:root {
+  /* ---- Lo que no cambia entre temas ---- */
 
   --accent: #ff2d6f;
   --cyan: #00d9c0;
   --amber: #ffb020;
   --red: #ff4d3d;
-  /* Verde único, el de la paleta de productos. Va oscuro a propósito: encima
-     lleva texto blanco, y sobre el verde brillante anterior el blanco no se leía. */
-  --green: #1a8f45;
+  --alarm: #e6001e;      /* stock por agotarse: no es el rojo de "peligro", es más fuerte */
+  --green: #1a8f45;      /* va oscuro: encima lleva texto blanco */
 
-  /* Tonos planos de los productos. Van más profundos que los acentos
-     de la interfaz porque encima lleva texto blanco y tiene que leerse
-     de un vistazo, a media luz y de reojo. */
+  --on-color: #0b0b10;   /* cyan y ámbar son claros: encima siempre texto oscuro */
+  --on-strong: #ffffff;  /* verde y rojo son oscuros: encima siempre texto blanco */
+
+  /* Tonos de los productos. Sirven en los dos temas: lo que cambia es cómo
+     se usan (ver --tone-fill y --punch-ink más abajo). */
   --t1: #e01055;
   --t2: #00857a;
   --t3: #b86a00;
@@ -53,8 +64,64 @@
   /* Ancho de la app: header, contenido y tab bar comparten esta columna,
      así en desktop nada se va a los bordes del monitor. */
   --shell: 900px;
+}
 
+/* ---- Paleta oscura (la de la noche, y el default) ---- */
+
+:root,
+:root[data-theme='dark'] {
   color-scheme: dark;
+
+  --bg: #0b0b10;
+  --surface: #16161f;
+  --surface-2: #1e1e2a;
+  --surface-3: #2a2a38;
+  --line: #2c2c3a;
+
+  --text: #ffffff;
+  --text-dim: #c2c2d4;
+  --text-faint: #9494ad;
+
+  --invert-bg: #ffffff;
+  --invert-ink: #0b0b10;
+
+  /* El bloque de producto: relleno translúcido del tono y texto blanco */
+  --tone-fill: 0.22;
+  --punch-ink: var(--text);
+
+  --veil: rgba(0, 0, 0, 0.3);        /* velos sobre color (flash, recuadros) */
+  --veil-soft: rgba(0, 0, 0, 0.2);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --scrim: rgba(5, 5, 8, 0.72);      /* fondo detrás de hojas y diálogos */
+}
+
+/* ---- Paleta clara (para cargar stock de día, o mirar reportes) ---- */
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f4f4f7;
+  --surface: #ffffff;
+  --surface-2: #ececeF;
+  --surface-3: #dededf;
+  --line: #dcdce3;
+
+  --text: #14141c;
+  --text-dim: #4d4d5f;
+  --text-faint: #70708a;
+
+  --invert-bg: #14141c;
+  --invert-ink: #ffffff;
+
+  /* Sobre fondo claro el texto blanco no se lee en un relleno translúcido:
+     el bloque baja el relleno y escribe con el color del propio tono. */
+  --tone-fill: 0.14;
+  --punch-ink: var(--tone);
+
+  --veil: rgba(0, 0, 0, 0.28);
+  --veil-soft: rgba(0, 0, 0, 0.08);
+  --shadow: 0 6px 24px rgba(20, 20, 28, 0.16);
+  --scrim: rgba(20, 20, 28, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -153,14 +220,14 @@ input::placeholder { color: var(--text-faint); }
 
 .event-chip.live {
   background: var(--green);
-  color: var(--text);
+  color: var(--on-strong);
 }
 
 .event-chip .pulse {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--text);
+  background: var(--on-strong);
   animation: pulse 1.6s ease-in-out infinite;
   flex: none;
 }
@@ -256,8 +323,8 @@ input::placeholder { color: var(--text-faint); }
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: var(--text);
-  color: var(--on-color);
+  background: var(--invert-bg);
+  color: var(--invert-ink);
   font-weight: 700;
   font-size: 16px;
   padding: 17px 28px;
@@ -349,14 +416,14 @@ input::placeholder { color: var(--text-faint); }
   position: absolute;
   top: 9px;
   right: 9px;
+  color: var(--on-strong);
   font-family: var(--font-mono);
   font-size: 17px;
   font-weight: 700;
   line-height: 1;
   padding: 5px 12px;
   border-radius: 100px;
-  background: rgba(0, 0, 0, 0.28);
-  color: var(--text);
+  background: var(--veil);
 }
 
 /* Tonos planos: cada producto cae siempre en el mismo color */
@@ -378,22 +445,23 @@ input::placeholder { color: var(--text-faint); }
    (Si en algún momento se quiere el borde, es agregar acá:
    border: 2px solid var(--tone); y subir el padding en 2px.) */
 .punch[class*='tone-'] {
-  background: rgba(var(--tone-rgb), 0.22);
+  background: rgba(var(--tone-rgb), var(--tone-fill));
+  color: var(--punch-ink);
 }
 
 .punch[class*='tone-'] .stock-badge { background: var(--tone); }
 
 /* El aviso de stock bajo tiene que ganarle al tono del producto */
-.punch.low[class*='tone-'] .stock-badge { background: #e6001e; }
+.punch.low[class*='tone-'] .stock-badge { background: var(--alarm); }
 
 /* Poco stock: el disco mantiene su color y alarma el número. Rojo pleno con
    un latido lento — se detecta con el rabo del ojo sin tener que leer nada. */
 .punch.low .stock-badge {
-  background: #e6001e;
-  color: #fff;
+  background: var(--alarm);
+  color: var(--on-strong);
   font-size: 16px;
   padding: 4px 11px;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px var(--bg);
   animation: alarm 1.3s ease-in-out infinite;
 }
 
@@ -408,7 +476,7 @@ input::placeholder { color: var(--text-faint); }
   color: var(--text-faint);
   pointer-events: none;
 }
-.punch.out .stock-badge { background: var(--red); color: var(--text); }
+.punch.out .stock-badge { background: var(--red); color: var(--on-strong); }
 
 /* El único acuse de recibo de una venta: el −1 y el stock ya cambiado.
    No hay pantalla de "venta registrada" — eso mataría la velocidad. */
@@ -422,8 +490,8 @@ input::placeholder { color: var(--text-faint); }
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 54px;
-  color: var(--text);
-  background: rgba(0, 0, 0, 0.3);
+  color: var(--on-strong);
+  background: var(--veil);
   animation: flashUp 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
 
@@ -440,7 +508,7 @@ input::placeholder { color: var(--text-faint); }
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 8, 0.7);
+  background: var(--scrim);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -511,7 +579,7 @@ input::placeholder { color: var(--text-faint); }
 .mode-btn .m-icon { font-size: 22px; line-height: 1; }
 
 .mode-btn.selected { color: var(--on-color); }
-.mode-btn.selected.regular { background: var(--green); color: var(--text); }
+.mode-btn.selected.regular { background: var(--green); color: var(--on-strong); }
 .mode-btn.selected.custom { background: var(--cyan); }
 .mode-btn.selected.gift { background: var(--amber); }
 
@@ -562,7 +630,7 @@ input::placeholder { color: var(--text-faint); }
   font-weight: 700;
   font-size: 19px;
   background: var(--accent);
-  color: var(--text);
+  color: var(--on-strong);
 }
 
 .confirm-btn:disabled { opacity: 0.3; }
@@ -594,7 +662,7 @@ input::placeholder { color: var(--text-faint); }
   padding: 8px;
   background: var(--surface);
   border-radius: 100px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow);
   overflow-x: auto;
   scrollbar-width: none;
   z-index: 25;
@@ -629,11 +697,11 @@ input::placeholder { color: var(--text-faint); }
 .recent-chip .rn { font-weight: 700; font-size: 15px; }
 .recent-chip .rv { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
 
-.recent-chip.gift { background: #3a2c0c; }
-.recent-chip.custom { background: #0c3330; }
+.recent-chip.gift { box-shadow: inset 0 0 0 2px var(--amber); }
+.recent-chip.custom { box-shadow: inset 0 0 0 2px var(--cyan); }
 
-.recent-chip.confirming { background: var(--red); color: var(--on-color); }
-.recent-chip.confirming .rv { color: var(--on-color); }
+.recent-chip.confirming { background: var(--red); color: var(--on-strong); }
+.recent-chip.confirming .rv { color: var(--on-strong); }
 
 /* ---------- Filtro de fechas ---------- */
 
@@ -657,7 +725,7 @@ input::placeholder { color: var(--text-faint); }
   white-space: nowrap;
 }
 
-.seg.selected { background: var(--text); color: var(--on-color); }
+.seg.selected { background: var(--invert-bg); color: var(--invert-ink); }
 
 
 /* ---------- Picker (selector propio) ---------- */
@@ -809,7 +877,7 @@ input::placeholder { color: var(--text-faint); }
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 8, 0.72);
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -877,7 +945,7 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .dlg-btn.ghost { background: var(--surface-2); color: var(--text-dim); }
-.dlg-btn.danger { background: var(--red); color: var(--text); }
+.dlg-btn.danger { background: var(--red); color: var(--on-strong); }
 
 /* ---------- Paleta de color del producto ---------- */
 
@@ -903,7 +971,7 @@ input::placeholder { color: var(--text-faint); }
 /* La muestra se pinta igual que el bloque: relleno translúcido y un punto
    pleno adentro, que es el equivalente de la chapita del stock. */
 .sw[class*='tone-'] {
-  background: rgba(var(--tone-rgb), 0.22);
+  background: rgba(var(--tone-rgb), var(--tone-fill));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -929,7 +997,7 @@ input::placeholder { color: var(--text-faint); }
   font-size: 14px;
 }
 
-.sw-auto.selected { background: var(--text); color: var(--on-color); }
+.sw-auto.selected { background: var(--invert-bg); color: var(--invert-ink); }
 
 .tone-editor {
   background: var(--surface);
@@ -949,7 +1017,7 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .row-sw[class*='tone-'] {
-  background: rgba(var(--tone-rgb), 0.22);
+  background: rgba(var(--tone-rgb), var(--tone-fill));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1006,7 +1074,7 @@ input::placeholder { color: var(--text-faint); }
   padding: 16px;
   border-radius: var(--r-md);
   background: var(--green);
-  color: var(--text);
+  color: var(--on-strong);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 16px;
@@ -1141,7 +1209,7 @@ input::placeholder { color: var(--text-faint); }
   color: var(--text-faint);
 }
 
-.role-btn.selected { background: var(--text); color: var(--on-color); }
+.role-btn.selected { background: var(--invert-bg); color: var(--invert-ink); }
 .role-btn:disabled { cursor: default; }
 .role-btn.selected:disabled { opacity: 1; }
 .icon-btn:disabled { opacity: 0.35; cursor: default; }
@@ -1168,9 +1236,18 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .switch.on { background: var(--green); }
-.switch.on .knob { transform: translateX(20px); background: #fff; }
+.switch.on .knob { transform: translateX(20px); background: var(--on-strong); }
 
 .switch:disabled { opacity: 0.4; cursor: default; }
+
+/* Botones que son solo un icono: cuadrados */
+.topbar .icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  color: var(--text-dim);
+}
 
 /* El botón del tacho es solo el icono: cuadrado y del alto del switch */
 .user-actions .icon-btn {
@@ -1191,11 +1268,11 @@ input::placeholder { color: var(--text-faint); }
 
 .event-card.active {
   background: var(--green);
-  color: var(--text);
+  color: var(--on-strong);
 }
 
-.event-card.active .event-meta { color: rgba(255, 255, 255, 0.75); }
-.event-card.active .stat-box { background: rgba(0, 0, 0, 0.2); }
+.event-card.active .event-meta { color: rgba(255, 255, 255, 0.78); }
+.event-card.active .stat-box { background: rgba(0, 0, 0, 0.22); }
 .event-card.active .stat-box .lbl { color: rgba(255, 255, 255, 0.7); }
 
 .event-name {
@@ -1244,8 +1321,8 @@ input::placeholder { color: var(--text-faint); }
   font-size: 16px;
 }
 
-.btn-start { background: var(--green); color: var(--text); }
-.btn-stop { background: var(--on-color); color: var(--text); }
+.btn-start { background: var(--green); color: var(--on-strong); }
+.btn-stop { background: rgba(0, 0, 0, 0.55); color: var(--on-strong); }
 
 /* Acción secundaria dentro de la tarjeta del evento en curso */
 .btn-ghost {
@@ -1255,8 +1332,8 @@ input::placeholder { color: var(--text-faint); }
   justify-content: center;
   padding: 15px;
   border-radius: var(--r-md);
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--text);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--on-strong);
   font-weight: 700;
   font-size: 15px;
 }

@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
+import { SunIcon, MoonIcon } from './icons'
 import Logo from './Logo'
 
 /* Iconos de línea, un solo color, heredando el del tab. Los emoji traían su
@@ -50,6 +52,7 @@ const TABS = [
 
 export default function Nav({ activeEvent }) {
   const { signOut, demo } = useAuth()
+  const { theme, toggle } = useTheme()
 
   return (
     <>
@@ -64,6 +67,14 @@ export default function Nav({ activeEvent }) {
         ) : (
           <div className="event-chip">Sin evento</div>
         )}
+
+        <button
+          className="icon-btn"
+          onClick={toggle}
+          aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
 
         {/* En demo no hay sesión que cerrar. El reset vive en Stock, abajo de todo:
             un ↺ acá arriba se lee como "deshacer" y no lo es. */}
