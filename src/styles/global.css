@@ -1,0 +1,1237 @@
+/* ============================================================
+   STOKKI — sistema visual
+   Se usa en un bar a media luz, con gente apurada y el celular en
+   una mano. Estética de app, no de página web: color plano, nada de
+   gradientes ni brillos, bloques grandes, iconos que se reconocen
+   antes de leer, y la navegación abajo al alcance del pulgar.
+   ============================================================ */
+
+:root {
+  --bg: #0b0b10;
+  --surface: #16161f;
+  --surface-2: #1e1e2a;
+  --surface-3: #2a2a38;
+  --line: #2c2c3a;
+
+  --text: #ffffff;
+  --text-dim: #a0a0b8;
+  --text-faint: #6b6b85;
+  --on-color: #0b0b10;   /* texto sobre los colores planos */
+
+  --accent: #ff2d6f;
+  --cyan: #00d9c0;
+  --amber: #ffb020;
+  --red: #ff4d3d;
+  --green: #22c55e;
+
+  /* Tonos planos de los productos. Van más profundos que los acentos
+     de la interfaz porque encima lleva texto blanco y tiene que leerse
+     de un vistazo, a media luz y de reojo. */
+  --t1: #e01055;
+  --t2: #00857a;
+  --t3: #b86a00;
+  --t4: #6a3ff0;
+  --t5: #1f6feb;
+  --t6: #d2450f;
+  --t7: #1a8f45;
+  --t8: #b52490;
+
+  /* Una sola familia para todo, números incluidos. tabular-nums evita que el
+     stock "baile" de ancho cuando pasa de 9 a 10 o de 99 a 100. */
+  --font: Roboto, system-ui, -apple-system, sans-serif;
+  --font-display: Roboto, system-ui, sans-serif;
+  --font-mono: Roboto, system-ui, sans-serif;
+
+  --r-lg: 24px;
+  --r-md: 16px;
+  --r-sm: 12px;
+
+  --tabbar-h: 76px;
+
+  /* Ancho de la app: header, contenido y tab bar comparten esta columna,
+     así en desktop nada se va a los bordes del monitor. */
+  --shell: 900px;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Nada de estética de documento: los links acá son controles, no texto */
+a, a:visited {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  color: inherit;
+  background: none;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+input {
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  border-radius: var(--r-sm);
+}
+
+input:focus { border-color: var(--surface-3); outline: none; }
+input::placeholder { color: var(--text-faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- Estructura ---------- */
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  max-width: var(--shell);
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+/* El logo manda el alto de la barra. width auto + los atributos width/height
+   en el <img> evitan que el header salte mientras la imagen carga. */
+.brand-logo {
+  height: 26px;
+  width: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.event-chip {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  max-width: 45vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-chip.live {
+  background: var(--green);
+  color: var(--on-color);
+}
+
+.event-chip .pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--on-color);
+  animation: pulse 1.6s ease-in-out infinite;
+  flex: none;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.main {
+  flex: 1;
+  padding: 4px 16px calc(var(--tabbar-h) + 24px);
+  max-width: var(--shell);
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ---------- Tab bar: navegación abajo, al alcance del pulgar ---------- */
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  /* La barra sigue ocupando todo el ancho, pero los tabs se centran en la
+     misma columna que el contenido en vez de irse a los bordes del monitor. */
+  padding-inline: max(0px, calc((100% - var(--shell)) / 2));
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: var(--tabbar-h);
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 0.12s ease;
+}
+
+/* La selección no usa color: el tab activo se marca con una pastilla clara
+   detrás del icono y el texto en blanco. */
+.tab .tab-icon {
+  opacity: 0.7;
+  box-sizing: content-box;   /* el padding agranda la pastilla, no achica el dibujo */
+  padding: 4px 13px;
+  border-radius: 100px;
+  background: transparent;
+  transition: background 0.14s ease, opacity 0.14s ease;
+}
+
+.tab.active { color: var(--text); }
+
+.tab.active .tab-icon {
+  opacity: 1;
+  background: var(--surface-3);
+}
+
+/* ---------- Login ---------- */
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.login-logo {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+}
+
+.login-sub {
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 320px;
+  margin: 0;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--text);
+  color: var(--on-color);
+  font-weight: 700;
+  font-size: 16px;
+  padding: 17px 28px;
+  border-radius: var(--r-md);
+  width: 100%;
+  max-width: 320px;
+}
+
+.login-error { color: var(--red); font-size: 14px; max-width: 300px; }
+
+/* ---------- Grilla de productos ---------- */
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 8px 0 14px;
+  line-height: 1.4;
+}
+
+/* Dos columnas es el piso, siempre. Con auto-fill solo, un teléfono angosto
+   (o el navegador con zoom) baja a una sola columna y quedan pelotas gigantes. */
+.punch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (min-width: 500px) {
+  .punch-grid {
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+    gap: 20px;
+  }
+}
+
+.punch {
+  position: relative;
+  aspect-ratio: 1 / 0.78;   /* más bajo que ancho: entran más filas en pantalla */
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 26px 12px 14px;
+  text-align: center;
+  overflow: hidden;
+  transition: transform 0.09s ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  color: var(--text);
+}
+
+.punch:active { transform: scale(0.95); }
+
+.punch .name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.punch .price {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+/* Teléfonos angostos: dos columnas se mantienen, la tipografía se acomoda */
+@media (max-width: 359px) {
+  .punch .name { font-size: 20px; }
+  .punch .price { font-size: 13px; }
+  .punch .stock-badge { font-size: 15px; padding: 4px 10px; }
+}
+
+/* Ya no es un círculo: la esquina vuelve a ser usable y el stock va ahí,
+   que deja el centro libre para el nombre. */
+.punch .stock-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 5px 12px;
+  border-radius: 100px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+}
+
+/* Tonos planos: cada producto cae siempre en el mismo color */
+.punch.tone-1 { background: var(--t1); }
+.punch.tone-2 { background: var(--t2); }
+.punch.tone-3 { background: var(--t3); }
+.punch.tone-4 { background: var(--t4); }
+.punch.tone-5 { background: var(--t5); }
+.punch.tone-6 { background: var(--t6); }
+.punch.tone-7 { background: var(--t7); }
+.punch.tone-8 { background: var(--t8); }
+
+/* Poco stock: el disco mantiene su color y alarma el número. Rojo pleno con
+   un latido lento — se detecta con el rabo del ojo sin tener que leer nada. */
+.punch.low .stock-badge {
+  background: #e6001e;
+  color: #fff;
+  font-size: 16px;
+  padding: 4px 11px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  animation: alarm 1.3s ease-in-out infinite;
+}
+
+@keyframes alarm {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+/* Sin stock: sale del set de colores y queda apagado */
+.punch.out {
+  background: var(--surface);
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.punch.out .stock-badge { background: var(--red); color: var(--text); }
+
+/* El único acuse de recibo de una venta: el −1 y el stock ya cambiado.
+   No hay pantalla de "venta registrada" — eso mataría la velocidad. */
+.flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 54px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.3);
+  animation: flashUp 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+.flash.gift { font-size: 26px; letter-spacing: 0.06em; }
+
+@keyframes flashUp {
+  0% { opacity: 0; transform: scale(0.85); }
+  20% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+/* ---------- Hoja de venta ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.7);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 60;
+  animation: fadeIn 0.12s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: 10px 16px calc(24px + env(safe-area-inset-bottom));
+  animation: slideUp 0.18s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); }
+  to { transform: translateY(0); }
+}
+
+/* Manija: le avisa al ojo que esto es una hoja que se cierra */
+.sheet::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 100px;
+  background: var(--surface-3);
+  margin: 0 auto 18px;
+}
+
+.sheet-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 27px;
+  letter-spacing: -0.02em;
+}
+
+.sheet-sub { color: var(--text-dim); font-size: 15px; margin-bottom: 18px; }
+
+.mode-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 6px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.25;
+}
+
+.mode-btn .m-icon { font-size: 22px; line-height: 1; }
+
+.mode-btn.selected { color: var(--on-color); }
+.mode-btn.selected.regular { background: var(--green); }
+.mode-btn.selected.custom { background: var(--cyan); }
+.mode-btn.selected.gift { background: var(--amber); }
+
+.field-label {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.price-input {
+  width: 100%;
+  padding: 18px;
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.reason-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.reason-btn {
+  padding: 14px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.reason-btn.selected { background: var(--amber); color: var(--on-color); }
+
+.who-input { width: 100%; padding: 15px; font-size: 15px; margin-bottom: 16px; }
+
+.confirm-btn {
+  width: 100%;
+  padding: 19px;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  background: var(--accent);
+  color: var(--text);
+}
+
+.confirm-btn:disabled { opacity: 0.3; }
+
+.cancel-btn {
+  width: 100%;
+  padding: 15px;
+  margin-top: 6px;
+  border-radius: var(--r-md);
+  color: var(--text-faint);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ---------- Últimos movimientos + deshacer ---------- */
+
+/* Flota separada de la tab bar y con márgenes a los costados: tiene que
+   leerse como algo pasajero de esta pantalla, no como parte de la navegación. */
+.recent-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  max-width: calc(var(--shell) - 12px);
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 10px);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  background: var(--surface);
+  border-radius: 100px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  overflow-x: auto;
+  scrollbar-width: none;
+  z-index: 25;
+}
+
+.recent-bar::-webkit-scrollbar { display: none; }
+
+/* Sin este cartel la barra parece un historial y no se entiende que se toca */
+.recent-label {
+  flex: none;
+  padding-left: 10px;
+  padding-right: 2px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.recent-chip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  white-space: nowrap;
+  transition: background 0.12s ease;
+}
+
+.recent-chip .rn { font-weight: 700; font-size: 15px; }
+.recent-chip .rv { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+
+.recent-chip.gift { background: #3a2c0c; }
+.recent-chip.custom { background: #0c3330; }
+
+.recent-chip.confirming { background: var(--red); color: var(--on-color); }
+.recent-chip.confirming .rv { color: var(--on-color); }
+
+/* ---------- Filtro de fechas ---------- */
+
+/* Agrupación + evento en una sola línea */
+.filter-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.seg {
+  flex: none;
+  padding: 0 15px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.seg.selected { background: var(--text); color: var(--on-color); }
+
+
+/* ---------- Picker (selector propio) ---------- */
+
+.picker-slot { flex: 1; min-width: 0; }
+
+.picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 13px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* Con filtro puesto el control se enciende: se nota que estás viendo un recorte */
+.picker-trigger.filled { color: var(--text); box-shadow: inset 0 0 0 2px var(--cyan); }
+
+.pt-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+  opacity: 0.8;
+  transition: transform 0.18s ease;
+}
+
+.chevron.open { transform: rotate(180deg); }
+
+.picker-sheet .sheet-title { margin-bottom: 16px; }
+
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 55vh;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.picker-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+}
+
+.picker-opt.selected { background: var(--cyan); color: var(--on-color); }
+
+.po-main { flex: 1; min-width: 0; }
+
+.po-label {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.po-hint {
+  display: block;
+  font-size: 13px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.picker-opt.selected .po-hint { color: rgba(11, 11, 16, 0.6); }
+
+/* Las dos fechas en una sola línea, sin etiquetas arriba: la flecha del medio
+   ya dice que es un rango, y en mobile ahorra una fila entera. */
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.date-sep { color: var(--text-faint); font-size: 14px; flex: none; }
+
+/* Solo aparece si hay filtro puesto: es la salida a "mostrar todo" */
+.date-clear {
+  flex: none;
+  width: 42px;
+  align-self: stretch;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Calendario nativo del sistema: en mobile abre la rueda de fechas del
+   teléfono y en escritorio el datepicker del navegador. */
+.date-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* El ícono del calendario lo dibuja el navegador y ya viene claro en tema
+   oscuro, así que un invert(1) lo pintaba negro sobre negro. brightness(0)
+   lo aplasta a negro y el invert lo devuelve blanco pleno, venga como venga. */
+.date-row input::-webkit-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+  opacity: 1;
+  cursor: pointer;
+  margin-left: 0;
+  padding: 2px;
+  transform: scale(1.15);
+}
+
+/* Acción de mantenimiento, no de la noche: discreta y al final de todo */
+.reset-link {
+  display: block;
+  width: 100%;
+  margin: 28px 0 8px;
+  padding: 14px;
+  color: var(--text-faint);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---------- Diálogo ----------
+   Tarjeta centrada, no pantalla completa: seguís viendo el contexto
+   de atrás y no se siente como que cambiaste de pantalla. */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 70;
+  animation: fadeIn 0.12s ease;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 24px 20px 20px;
+  animation: dialogIn 0.16s ease;
+}
+
+@keyframes dialogIn {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.dialog-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.dialog-sub {
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+.dialog-input {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.dlg-btn {
+  padding: 16px 10px;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  background: var(--cyan);
+  color: var(--on-color);
+}
+
+.dlg-btn.ghost { background: var(--surface-2); color: var(--text-dim); }
+.dlg-btn.danger { background: var(--red); color: var(--text); }
+
+/* ---------- Paleta de color del producto ---------- */
+
+.tone-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sw {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 0 transparent;
+  transition: box-shadow 0.12s ease;
+}
+
+/* El anillo marca el elegido sin cambiarle el color a la muestra */
+.sw.selected { box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 3px var(--text); }
+
+.sw.auto {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  opacity: 0.55;
+}
+
+.sw.auto.selected { opacity: 1; }
+
+.sw.tone-1 { background: var(--t1); }
+.sw.tone-2 { background: var(--t2); }
+.sw.tone-3 { background: var(--t3); }
+.sw.tone-4 { background: var(--t4); }
+.sw.tone-5 { background: var(--t5); }
+.sw.tone-6 { background: var(--t6); }
+.sw.tone-7 { background: var(--t7); }
+.sw.tone-8 { background: var(--t8); }
+
+.tone-editor {
+  background: var(--surface);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  margin-top: -8px;
+  padding: 16px 14px 4px;
+}
+
+.tone-editor .tone-picker { margin-bottom: 12px; }
+
+.row-sw {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: none;
+  padding: 0;
+}
+
+.row-sw.tone-1 { background: var(--t1); }
+.row-sw.tone-2 { background: var(--t2); }
+.row-sw.tone-3 { background: var(--t3); }
+.row-sw.tone-4 { background: var(--t4); }
+.row-sw.tone-5 { background: var(--t5); }
+.row-sw.tone-6 { background: var(--t6); }
+.row-sw.tone-7 { background: var(--t7); }
+.row-sw.tone-8 { background: var(--t8); }
+
+/* ---------- Caja inicial ---------- */
+
+.cash-now {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cash-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.cash-lbl { font-size: 13px; color: var(--text-faint); }
+
+/* ---------- Formularios y listas ---------- */
+
+.form-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.form-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin-bottom: 14px; }
+
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+.form-row input { flex: 1; padding: 15px; font-size: 16px; min-width: 0; }
+.form-row input.small { flex: 0.6; }
+
+.btn-primary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--r-md);
+  background: var(--cyan);
+  color: var(--on-color);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 6px;
+}
+
+.btn-primary:disabled { opacity: 0.3; }
+
+.product-list { display: flex; flex-direction: column; gap: 8px; }
+
+.product-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-radius: var(--r-md);
+}
+
+.product-row .row-main { flex: 1; min-width: 0; }
+.product-row .name { font-weight: 700; font-size: 17px; }
+.product-row .meta { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); margin-top: 2px; }
+
+.row-actions { display: flex; gap: 6px; flex: none; }
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+}
+
+.icon-btn.danger { color: var(--red); }
+
+/* ---------- Usuarios / equipo ---------- */
+
+.notice {
+  background: var(--surface);
+  border-left: 3px solid var(--cyan);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.notice strong { color: var(--text); }
+
+.user-list { display: flex; flex-direction: column; gap: 10px; }
+
+.user-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 16px;
+}
+
+.user-card.off { opacity: 0.55; }
+
+.user-head { display: flex; align-items: center; gap: 12px; }
+
+.avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 19px;
+}
+
+.user-main { flex: 1; min-width: 0; }
+
+.user-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.you {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+
+.user-mail {
+  font-size: 13px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* Los dos roles a la vista, no escondidos en un desplegable: son solo dos
+   y lo importante es ver de un vistazo quién es qué. */
+.role-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  margin-right: auto;
+}
+
+.role-btn {
+  padding: 9px 18px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-faint);
+}
+
+.role-btn.selected { background: var(--text); color: var(--on-color); }
+.role-btn:disabled { cursor: default; }
+.role-btn.selected:disabled { opacity: 1; }
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+
+.user-flag {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+}
+
+/* ---------- Eventos y reportes ---------- */
+
+.event-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 18px;
+  margin-bottom: 12px;
+}
+
+.event-card.active {
+  background: var(--green);
+  color: var(--on-color);
+}
+
+.event-card.active .event-meta { color: rgba(11, 11, 16, 0.65); }
+.event-card.active .stat-box { background: rgba(11, 11, 16, 0.14); }
+.event-card.active .stat-box .lbl { color: rgba(11, 11, 16, 0.6); }
+
+.event-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.event-meta { font-size: 14px; color: var(--text-dim); margin-top: 2px; }
+
+.event-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.stat-box {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.stat-box .val { font-family: var(--font-mono); font-weight: 700; font-size: 21px; }
+.stat-box .lbl {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 3px;
+  font-weight: 700;
+}
+
+.btn-start, .btn-stop {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 17px;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.btn-start { background: var(--green); color: var(--on-color); }
+.btn-stop { background: var(--on-color); color: var(--text); }
+
+/* Acción secundaria dentro de la tarjeta del evento en curso */
+.btn-ghost {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  border-radius: var(--r-md);
+  background: rgba(11, 11, 16, 0.14);
+  color: var(--on-color);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--text-faint);
+  font-size: 14px;
+}
+
+.empty-state .em { font-size: 44px; display: block; margin-bottom: 14px; filter: grayscale(1); opacity: 0.5; }
+
+.empty-state .big {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 20px 0 10px;
+}
+
+.section-title:first-child { margin-top: 8px; }
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-row .n { color: var(--text-dim); }
+.breakdown-row .v { font-family: var(--font-mono); font-weight: 700; }
