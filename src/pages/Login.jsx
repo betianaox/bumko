@@ -1,38 +1,32 @@
 import { useAuth } from '../context/AuthContext'
+import Logo from '../components/Logo'
 
 export default function Login() {
   const { user, authorized, loading, error, signIn, signOut } = useAuth()
 
-  if (loading) {
-    return (
-      <div className="login-screen">
-        <img className="login-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
-      </div>
-    )
-  }
-
-  if (user && !authorized) {
-    return (
-      <div className="login-screen">
-        <img className="login-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
-        <p className="login-sub">
-          Entraste como <strong>{user.email}</strong>, pero todavía no estás
-          habilitado en el equipo. Pedile a un admin que te agregue.
-        </p>
-        <button className="google-btn" onClick={signOut}>Probar con otra cuenta</button>
-      </div>
-    )
-  }
-
+  // Las tres situaciones comparten pantalla y logo; solo cambia lo de abajo.
   return (
     <div className="login-screen">
-      <img className="login-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
-      <p className="login-sub">Control de stock para la noche. Entrá con tu cuenta de Google del equipo.</p>
-      <button className="google-btn" onClick={signIn}>
-        <GoogleIcon />
-        Iniciar sesión con Google
-      </button>
-      {error && <p className="login-error">{error}</p>}
+      <Logo className="login-logo" />
+
+      {!loading && (user && !authorized ? (
+        <>
+          <p className="login-sub">
+            Entraste como <strong>{user.email}</strong>, pero todavía no estás
+            habilitado en el equipo. Pedile a un admin que te agregue.
+          </p>
+          <button className="google-btn" onClick={signOut}>Probar con otra cuenta</button>
+        </>
+      ) : (
+        <>
+          <p className="login-sub">Control de stock para la noche. Entrá con tu cuenta de Google del equipo.</p>
+          <button className="google-btn" onClick={signIn}>
+            <GoogleIcon />
+            Iniciar sesión con Google
+          </button>
+          {error && <p className="login-error">{error}</p>}
+        </>
+      ))}
     </div>
   )
 }

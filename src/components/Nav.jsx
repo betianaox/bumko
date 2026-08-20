@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
 /* Iconos de línea, un solo color, heredando el del tab. Los emoji traían su
    propia paleta y cada sistema los dibuja distinto. */
@@ -53,7 +54,7 @@ export default function Nav({ activeEvent }) {
   return (
     <>
       <div className="topbar">
-        <img className="brand-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
+        <Logo className="brand-logo" />
 
         {activeEvent ? (
           <div className="event-chip live">
