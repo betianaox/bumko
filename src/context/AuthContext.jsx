@@ -6,7 +6,7 @@ import { auth, googleProvider, db, DEMO } from '../firebase'
 const AuthContext = createContext(null)
 
 const DEMO_USER = {
-  email: 'demo@stokki.app',
+  email: 'demo@bumko.app',
   displayName: 'Usuario demo',
   teamData: { name: 'Usuario demo', role: 'admin' },
 }

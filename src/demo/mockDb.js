@@ -6,7 +6,7 @@
    ============================================================ */
 
 // Subir el número descarta lo guardado en el navegador y vuelve a sembrar.
-const STORAGE_KEY = 'stokki-demo-db-v3'
+const STORAGE_KEY = 'bumko-demo-db-v1'
 
 // ---------- Timestamps ----------
 // Firestore devuelve objetos con .toDate(); acá lo replicamos.
@@ -43,10 +43,10 @@ const SEED_PRODUCTS = [
 ]
 
 const SEED_TEAM = {
-  'demo@stokki.app': { email: 'demo@stokki.app', name: 'Usuario demo', role: 'admin', active: true },
-  'sofia@stokki.app': { email: 'sofia@stokki.app', name: 'Sofía Ramírez', role: 'staff', active: true },
-  'juan@stokki.app': { email: 'juan@stokki.app', name: 'Juan Pérez', role: 'staff', active: true },
-  'pedro@stokki.app': { email: 'pedro@stokki.app', name: 'Pedro Molina', role: 'staff', active: false },
+  'demo@bumko.app': { email: 'demo@bumko.app', name: 'Usuario demo', role: 'admin', active: true },
+  'sofia@bumko.app': { email: 'sofia@bumko.app', name: 'Sofía Ramírez', role: 'staff', active: true },
+  'juan@bumko.app': { email: 'juan@bumko.app', name: 'Juan Pérez', role: 'staff', active: true },
+  'pedro@bumko.app': { email: 'pedro@bumko.app', name: 'Pedro Molina', role: 'staff', active: false },
 }
 
 function freshStore() {

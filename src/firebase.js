@@ -24,7 +24,7 @@ export const googleProvider = DEMO ? null : new GoogleAuthProvider()
 
 if (DEMO) {
   console.warn(
-    '[Stokki] Modo demo: falta el archivo .env con las credenciales de Firebase. ' +
+    '[Bumko] Modo demo: falta el archivo .env con las credenciales de Firebase. ' +
     'Los datos se guardan sólo en este navegador.',
   )
 }

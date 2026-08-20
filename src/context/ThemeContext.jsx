@@ -10,7 +10,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
    El primer pintado lo resuelve un script en index.html, para que no se vea
    un destello del tema equivocado antes de que React arranque. */
 
-const STORAGE_KEY = 'stokki-theme'
+const STORAGE_KEY = 'bumko-theme'
 const ThemeContext = createContext(null)
 
 // Colores de la barra del navegador en Android, uno por tema.

@@ -1,11 +1,10 @@
 import { useTheme } from '../context/ThemeContext'
 
 /* El logo en un solo lugar. Hay una versión por tema porque el nombre va en
-   un color que solo se lee sobre su fondo.
-   Cuando esté el archivo del tema claro, se cambia acá y nada más. */
+   blanco o en negro según el fondo; el ícono es el mismo rosa en las dos. */
 const FILE = {
-  dark: '/logo.png',
-  light: '/logo.png',
+  dark: '/bumko-dark.png',
+  light: '/bumko-light.png',
 }
 
 export default function Logo({ className = '' }) {
@@ -15,9 +14,9 @@ export default function Logo({ className = '' }) {
     <img
       className={className}
       src={FILE[theme]}
-      alt="Stokki"
-      width="800"
-      height="230"
+      alt="Bumko"
+      width="1674"
+      height="272"
     />
   )
 }

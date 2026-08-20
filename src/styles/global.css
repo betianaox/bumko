@@ -1,5 +1,5 @@
 /* ============================================================
-   STOKKI — sistema visual
+   BUMKO — sistema visual
    Se usa en un bar a media luz, con gente apurada y el celular en
    una mano. Estética de app, no de página web: color plano, nada de
    gradientes ni brillos, bloques grandes, iconos que se reconocen
@@ -196,7 +196,7 @@ input::placeholder { color: var(--text-faint); }
 /* El logo manda el alto de la barra. width auto + los atributos width/height
    en el <img> evitan que el header salte mientras la imagen carga. */
 .brand-logo {
-  height: 30px;
+  height: 26px;
   width: auto;
   margin-right: auto;
   display: block;
@@ -306,7 +306,7 @@ input::placeholder { color: var(--text-faint); }
 
 .login-logo {
   width: 100%;
-  max-width: 240px;
+  max-width: 270px;
   height: auto;
 }
 

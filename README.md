@@ -1,14 +1,14 @@
-# Stokki
+# Bumko
 
 Control de stock rápido para bar, pensado para usarse durante una fiesta:
 botones grandes, poca fricción, varias personas vendiendo a la vez.
 
 ## 1. Crear el proyecto de Firebase
 
-1. Andá a https://console.firebase.google.com → **Agregar proyecto** → nombralo (ej. `stokki`).
+1. Andá a https://console.firebase.google.com → **Agregar proyecto** → nombralo (ej. `bumko`).
 2. Adentro del proyecto: **Authentication → Sign-in method → habilitar Google**.
 3. **Firestore Database → Crear base de datos** (modo producción, la región no importa mucho, elegí `southamerica-east1` si querés la más cercana).
-4. **Configuración del proyecto (ícono de engranaje) → Tus apps → Web (`</>`)** → registrá una app llamada `stokki-web`. Te va a dar un objeto `firebaseConfig`.
+4. **Configuración del proyecto (ícono de engranaje) → Tus apps → Web (`</>`)** → registrá una app llamada `bumko-web`. Te va a dar un objeto `firebaseConfig`.
 
 ## 2. Configurar las variables de entorno
 
@@ -64,7 +64,7 @@ firebase init hosting     # public directory: dist — configurar como single-pa
 firebase deploy --only hosting
 ```
 
-Te da una URL tipo `https://stokki-xxxx.web.app` — esa es la que abrís desde los celulares del equipo esa noche.
+Te da una URL tipo `https://bumko-xxxx.web.app` — esa es la que abrís desde los celulares del equipo esa noche.
 
 ## Cómo se usa en la fiesta
 
