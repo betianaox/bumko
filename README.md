@@ -75,7 +75,7 @@ En la pestaña **Equipo** hay un interruptor de **entrada libre**:
 - **Prendido** — cualquiera que abra el link de la web y entre con su cuenta
   de Google queda adentro del bar como staff, sin que nadie lo cargue. Es lo
   cómodo para una noche: pasás el link por el grupo y listo. Para que funcione,
-  el  tiene que tener  con el id de tu bar.
+  el archivo `.env` tiene que tener `VITE_BAR_ID` con el id de tu bar.
 - **Apagado** — solo entra quien esté en la lista. Ahí sumás gente a mano
   escribiendo su mail de Google.
 
@@ -125,13 +125,17 @@ Te da una URL tipo `https://bumko-xxxx.web.app` — esa es la que abrís desde l
 ## Cómo se usa en la fiesta
 
 - **Vender**: un toque en el producto lo vende al precio regular, sin confirmar nada — vibra, sale un `−1` y el stock baja. Para cobrar otro precio o regalar, **mantené apretado** el producto y se abre la hoja con las opciones.
-- **Corregir**: abajo queda la barra con los últimos 5 movimientos. Tocás uno y se convierte en "Anular ✕"; lo tocás de nuevo y se deshace (devuelve el stock y borra la venta). Si no confirmás, vuelve solo a los 3 segundos. Los movimientos de más de 2 minutos se caen de la barra.
+- **Corregir**: abajo queda la barra con los últimos 5 movimientos. Tocás uno y se convierte en "Anular ✕"; lo tocás de nuevo y se deshace (devuelve el stock y borra la venta). Si no confirmás, vuelve solo a los 3 segundos. Cada movimiento queda a mano durante 10 segundos.
 - **Eventos**: antes de arrancar la noche, andá a la pestaña Eventos y tocá "Iniciar evento" (ej. "Fiesta sábado"). Al cerrar la noche, tocás "Cerrar evento". Todo lo vendido en el medio queda agrupado ahí.
-- **Reportes**: podés ver todo agrupado por día o por evento, con el total recaudado, cuántos regalos y por qué motivo, y el ranking de productos más vendidos.
+- **Reportes**: filtrás por rango de fechas y por evento, y lo mirás agrupado por día o por mes. Cada grupo muestra lo recaudado, cuántas unidades salieron, cuántas fueron regaladas y por qué motivo, los más vendidos y quién registró cada cosa.
 
-## Roadmap para la versión de Play Store
+## Lo que viene: la app nativa
 
-Esta versión web es el MVP para el sábado. Cosas que quedan para cuando se reformule como app nativa:
-- Roles separados (admin vs staff) en vez de whitelist plana
-- Persistencia offline más robusta
-- Convertir a app instalable / nativa para publicar en Play Store
+Esta web es la primera versión. La app en React Native va a usar esta misma
+base de datos, con la misma estructura, así que las dos pueden convivir: alguien
+carga el stock desde la computadora mientras el equipo vende desde el teléfono.
+
+Lo que cambia en la app:
+- Cada quien que la instale crea su propio bar, en vez de entrar a uno fijo
+- Entrar con un código o una invitación, en lugar de la entrada libre por link
+- Funcionar sin señal y sincronizar después
