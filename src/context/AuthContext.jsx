@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut as fbSignOut } from 'firebase/auth'
-import { getDoc } from '../data'
-import { auth, googleProvider, DEMO } from '../firebase'
+import { doc, getDoc, setDoc, serverTimestamp } from '../data'
+import { auth, googleProvider, db, DEMO, BAR_ID } from '../firebase'
 import { barDoc, usuarioDoc } from '../bar'
 import { DEMO_BAR } from '../demo/mockDb'
 
@@ -54,8 +54,28 @@ export function AuthProvider({ children }) {
         const email = fbUser.email.toLowerCase()
         const indice = await getDoc(usuarioDoc(email))
 
-        if (!indice.exists()) {
-          // Entró con Google pero nadie la invitó a ningún bar
+        let bar = indice.exists() ? indice.data().barId : null
+
+        // No pertenece a ningún bar todavía. Si esta instalación de la web
+        // apunta a un bar con la puerta abierta, se suma solo como staff:
+        // el equipo entra escaneando el link, sin que nadie los cargue de a uno.
+        if (!bar && BAR_ID) {
+          const puerta = await getDoc(doc(db, 'bares', BAR_ID))
+          if (puerta.exists() && puerta.data().autoJoin) {
+            await setDoc(barDoc(BAR_ID, 'equipo', email), {
+              email,
+              name: fbUser.displayName || email,
+              role: 'staff',
+              active: true,
+              createdAt: serverTimestamp(),
+            })
+            await setDoc(usuarioDoc(email), { barId: BAR_ID })
+            bar = BAR_ID
+          }
+        }
+
+        if (!bar) {
+          // Ni invitado ni puerta abierta: no entra a ningún lado
           setUser(fbUser)
           setAuthorized(false)
           setBarId(null)
@@ -63,7 +83,6 @@ export function AuthProvider({ children }) {
           return
         }
 
-        const bar = indice.data().barId
         const miembro = await getDoc(barDoc(bar, 'equipo', email))
         const data = miembro.exists() ? miembro.data() : {}
 

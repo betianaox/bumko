@@ -56,7 +56,7 @@ const bajo = (sub) => `bares/${DEMO_BAR}/${sub}`
 
 function freshStore() {
   const store = {
-    bares: { [DEMO_BAR]: { name: 'Bar de ejemplo', ownerEmail: 'demo@bumko.app' } },
+    bares: { [DEMO_BAR]: { name: 'Bar de ejemplo', ownerEmail: 'demo@bumko.app', autoJoin: true } },
     usuarios: {},
     [bajo('products')]: {},
     [bajo('sales')]: {},
@@ -186,8 +186,19 @@ function runQuery(q) {
 }
 
 export function onSnapshot(refOrQuery, cb) {
+  // Escuchar un documento suelto devuelve el documento; escuchar una colección
+  // devuelve la lista. Firestore distingue por el tipo de referencia y acá
+  // alcanza con mirar si la referencia trae id.
+  const esDoc = refOrQuery.__id !== undefined
   const q = refOrQuery.constraints ? refOrQuery : { __col: refOrQuery.__col, constraints: [] }
-  const run = () => cb(runQuery(q))
+
+  const run = esDoc
+    ? () => {
+      const data = store[refOrQuery.__col]?.[refOrQuery.__id]
+      cb({ exists: () => !!data, data: () => ({ ...data }), id: refOrQuery.__id })
+    }
+    : () => cb(runQuery(q))
+
   const entry = { col: q.__col, run }
   listeners.push(entry)
   run()

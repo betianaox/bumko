@@ -70,12 +70,20 @@ Ahora entrás con Google y ya estás adentro de tu bar.
 
 ### Sumar al resto del equipo
 
-Desde la pestaña **Equipo**: escribís el mail de Google de la persona y tocás
-**Invitar**. Cuando entre con esa misma cuenta, cae directo en tu bar como
-staff. Desde ahí la podés pasar a admin, suspenderla o sacarla.
+En la pestaña **Equipo** hay un interruptor de **entrada libre**:
 
-Nadie se registra solo: un mail que no fue invitado entra a la pantalla de
-login y le dice que pida que lo inviten.
+- **Prendido** — cualquiera que abra el link de la web y entre con su cuenta
+  de Google queda adentro del bar como staff, sin que nadie lo cargue. Es lo
+  cómodo para una noche: pasás el link por el grupo y listo. Para que funcione,
+  el  tiene que tener  con el id de tu bar.
+- **Apagado** — solo entra quien esté en la lista. Ahí sumás gente a mano
+  escribiendo su mail de Google.
+
+En los dos casos entran como **staff** y nunca como admin: eso lo cambia un
+admin después, desde la misma pantalla.
+
+Conviene apagarlo cuando ya entraron todos. Mientras esté prendido, cualquiera
+que tenga el link y una cuenta de Google puede sumarse y registrar ventas.
 
 ### Qué puede hacer cada rol
 

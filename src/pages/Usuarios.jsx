@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { onSnapshot, updateDoc, deleteDoc, setDoc, serverTimestamp } from '../data'
+import { onSnapshot, doc, updateDoc, deleteDoc, setDoc, serverTimestamp } from '../data'
+import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc, usuarioDoc } from '../bar'
 import Dialog from '../components/Dialog'
@@ -28,6 +29,7 @@ export default function Usuarios() {
   const [users, setUsers] = useState([])
   const [dialog, setDialog] = useState(null)
   const [nuevo, setNuevo] = useState('')
+  const [bar, setBar] = useState(null)
 
   useEffect(() => {
     if (!barId) return
@@ -35,6 +37,19 @@ export default function Usuarios() {
       setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
   }, [barId])
+
+  // La puerta abierta: mientras esté prendida, cualquiera que entre con Google
+  // desde el link de esta web se suma solo como staff, sin que nadie lo invite.
+  useEffect(() => {
+    if (!barId) return
+    return onSnapshot(doc(db, 'bares', barId), (snap) => {
+      setBar(snap.exists() ? snap.data() : null)
+    })
+  }, [barId])
+
+  const togglePuerta = async () => {
+    await updateDoc(doc(db, 'bares', barId), { autoJoin: !bar?.autoJoin })
+  }
 
   const setRole = async (u, role) => {
     if (u.role === role) return
@@ -88,11 +103,27 @@ export default function Usuarios() {
 
       {isAdmin && (
         <div className="form-card">
-          <div className="form-row" style={{ marginBottom: 0 }}>
+          <div className="puerta">
+            <div className="puerta-main">
+              <div className="puerta-title">Entrada libre</div>
+              <div className="puerta-sub">
+                {bar?.autoJoin
+                  ? 'Cualquiera que abra el link y entre con Google queda como staff.'
+                  : 'Solo entra quien esté en la lista de abajo.'}
+              </div>
+            </div>
+            <Switch
+              checked={!!bar?.autoJoin}
+              label="Entrada libre"
+              onChange={togglePuerta}
+            />
+          </div>
+
+          <div className="form-row" style={{ marginBottom: 0, marginTop: 14 }}>
             <input
               type="email"
               inputMode="email"
-              placeholder="Mail de Google de quien se suma"
+              placeholder="O sumar un mail a mano"
               value={nuevo}
               onChange={(e) => setNuevo(e.target.value)}
             />
@@ -102,7 +133,7 @@ export default function Usuarios() {
               disabled={!nuevo.includes('@')}
               onClick={handleInvite}
             >
-              Invitar
+              Sumar
             </button>
           </div>
         </div>

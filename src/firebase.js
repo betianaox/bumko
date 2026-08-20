@@ -17,6 +17,11 @@ const firebaseConfig = {
 // (auth/invalid-api-key) la app entra en modo demo con datos locales.
 export const DEMO = !firebaseConfig.apiKey || !firebaseConfig.projectId
 
+/* El bar de esta instalación de la web. Quien entra con Google y todavía no
+   pertenece a ningún bar se suma a este, siempre que el bar tenga la puerta
+   abierta. Es propio de la web: en la app nativa cada uno crea el suyo. */
+export const BAR_ID = import.meta.env.VITE_BAR_ID || null
+
 export const app = DEMO ? null : initializeApp(firebaseConfig)
 export const auth = DEMO ? null : getAuth(app)
 export const db = DEMO ? null : getFirestore(app)

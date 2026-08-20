@@ -28,10 +28,22 @@ service cloud.firestore {
       return esDelBar(barId) && miembroDe(barId).role == 'admin';
     }
 
-    // Índice de personas. Cada uno puede leer el suyo para saber a qué bar
-    // entrar; escribirlo es cosa del admin que invita.
+    /* Un bar con la puerta abierta deja entrar a cualquiera que llegue por el
+       link, sin invitación: se anota solo y siempre como staff. Es lo que hace
+       que el equipo pueda arrancar una noche sin cargar a nadie de a uno.
+       El admin la apaga desde la pestaña Equipo cuando ya entraron todos. */
+    function puertaAbierta(barId) {
+      return get(/databases/$(database)/documents/bares/$(barId)).data.autoJoin == true;
+    }
+
+    // Índice de personas. Cada uno lee el suyo para saber a qué bar entrar.
     match /usuarios/{email} {
       allow read: if request.auth != null && yo() == email;
+
+      allow create: if request.auth != null
+        && yo() == email
+        && puertaAbierta(request.resource.data.barId);
+
       allow write: if request.auth != null
         && esAdminDe(request.resource.data.get('barId', resource.data.barId));
     }
@@ -44,7 +56,16 @@ service cloud.firestore {
 
       match /equipo/{email} {
         allow read: if esDelBar(barId);
-        allow write: if esAdminDe(barId);
+
+        // Anotarse uno mismo, solo con la puerta abierta y siempre como staff:
+        // nadie puede entrar dándose permisos de admin.
+        allow create: if request.auth != null
+          && yo() == email
+          && puertaAbierta(barId)
+          && request.resource.data.role == 'staff'
+          && request.resource.data.email == email;
+
+        allow update, delete: if esAdminDe(barId);
       }
 
       // Cargar, editar y borrar productos es del admin. El staff solo puede

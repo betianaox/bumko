@@ -1234,6 +1234,24 @@ input::placeholder { color: var(--text-faint); }
 .role-btn.selected:disabled { opacity: 1; }
 .icon-btn:disabled { opacity: 0.35; cursor: default; }
 
+/* La puerta abierta del bar */
+.puerta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.puerta-main { flex: 1; min-width: 0; }
+
+.puerta-title { font-weight: 700; font-size: 16px; }
+
+.puerta-sub {
+  font-size: 13px;
+  color: var(--text-faint);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
 /* Interruptor activo / suspendido. Sin texto: la posición y el color ya lo
    dicen, y así la fila entra en cualquier teléfono. */
 .switch {
