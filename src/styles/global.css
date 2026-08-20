@@ -22,7 +22,10 @@
   --cyan: #00d9c0;
   --amber: #ffb020;
   --red: #ff4d3d;
-  --green: #22c55e;
+  /* El mismo verde en todo: chip de evento en curso, tarjeta del evento,
+     botón de iniciar, modo "precio regular" y los switches. Es el verde
+     de la paleta de productos (--t7), más apagado que el original. */
+  --green: #1a8f45;
 
   /* Tonos planos de los productos. Van más profundos que los acentos
      de la interfaz porque encima lleva texto blanco y tiene que leerse
