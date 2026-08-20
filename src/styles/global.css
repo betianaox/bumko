@@ -22,9 +22,8 @@
   --cyan: #00d9c0;
   --amber: #ffb020;
   --red: #ff4d3d;
-  /* El mismo verde en todo: chip de evento en curso, tarjeta del evento,
-     botón de iniciar, modo "precio regular" y los switches. Es el verde
-     de la paleta de productos (--t7), más apagado que el original. */
+  /* Verde único, el de la paleta de productos. Va oscuro a propósito: encima
+     lleva texto blanco, y sobre el verde brillante anterior el blanco no se leía. */
   --green: #1a8f45;
 
   /* Tonos planos de los productos. Van más profundos que los acentos
@@ -154,14 +153,14 @@ input::placeholder { color: var(--text-faint); }
 
 .event-chip.live {
   background: var(--green);
-  color: var(--on-color);
+  color: var(--text);
 }
 
 .event-chip .pulse {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--on-color);
+  background: var(--text);
   animation: pulse 1.6s ease-in-out infinite;
   flex: none;
 }
@@ -512,7 +511,7 @@ input::placeholder { color: var(--text-faint); }
 .mode-btn .m-icon { font-size: 22px; line-height: 1; }
 
 .mode-btn.selected { color: var(--on-color); }
-.mode-btn.selected.regular { background: var(--green); }
+.mode-btn.selected.regular { background: var(--green); color: var(--text); }
 .mode-btn.selected.custom { background: var(--cyan); }
 .mode-btn.selected.gift { background: var(--amber); }
 
@@ -1190,12 +1189,12 @@ input::placeholder { color: var(--text-faint); }
 
 .event-card.active {
   background: var(--green);
-  color: var(--on-color);
+  color: var(--text);
 }
 
-.event-card.active .event-meta { color: rgba(11, 11, 16, 0.65); }
-.event-card.active .stat-box { background: rgba(11, 11, 16, 0.14); }
-.event-card.active .stat-box .lbl { color: rgba(11, 11, 16, 0.6); }
+.event-card.active .event-meta { color: rgba(255, 255, 255, 0.75); }
+.event-card.active .stat-box { background: rgba(0, 0, 0, 0.2); }
+.event-card.active .stat-box .lbl { color: rgba(255, 255, 255, 0.7); }
 
 .event-name {
   font-family: var(--font-display);
@@ -1243,7 +1242,7 @@ input::placeholder { color: var(--text-faint); }
   font-size: 16px;
 }
 
-.btn-start { background: var(--green); color: var(--on-color); }
+.btn-start { background: var(--green); color: var(--text); }
 .btn-stop { background: var(--on-color); color: var(--text); }
 
 /* Acción secundaria dentro de la tarjeta del evento en curso */
@@ -1254,8 +1253,8 @@ input::placeholder { color: var(--text-faint); }
   justify-content: center;
   padding: 15px;
   border-radius: var(--r-md);
-  background: rgba(11, 11, 16, 0.14);
-  color: var(--on-color);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
   font-weight: 700;
   font-size: 15px;
 }
