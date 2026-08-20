@@ -29,17 +29,37 @@ npm run dev
 
 Se abre en `http://localhost:5173`.
 
-## 4. Habilitarte a vos mismo como el primer usuario
+## 4. Crearte como el primer admin
 
-Como el whitelist de equipo (`equipo_autorizado`) se gestiona a mano por seguridad, tenés que crear el primer registro manualmente:
+El resto del equipo se registra solo: cualquiera que entre con Google queda
+guardado en `equipo_autorizado` con rol `staff`. Pero el **primer admin** no
+puede crearse desde la app — nadie puede darse permisos a sí mismo —, así que
+va a mano una única vez:
 
 1. Andá a Firestore Database en la consola de Firebase → **Iniciar colección**.
 2. ID de la colección: `equipo_autorizado`.
 3. ID del documento: **tu email de Google, todo en minúscula** (ej. `tunombre@gmail.com`).
-4. Agregale un campo cualquiera, por ejemplo `name` (string) con tu nombre.
+4. Agregale estos campos:
+   - `email` (string) → tu mismo email
+   - `name` (string) → tu nombre
+   - `role` (string) → `admin`
+   - `active` (boolean) → `true`
 5. Guardar.
 
-Ahora cuando entres a la app con Google con ese mismo email, vas a quedar autorizado. Para sumar a alguien más del equipo, repetís este paso con su email.
+Desde ahí, entrás con Google y ya podés gestionar al resto desde la pestaña
+**Equipo**: cambiar a alguien de staff a admin, suspenderlo o sacarlo.
+
+### Qué puede hacer cada rol
+
+| | Vender | Eventos | Stock | Reportes | Equipo |
+|---|---|---|---|---|---|
+| **Admin** | sí | sí | sí | sí | sí |
+| **Staff** | sí | — | — | — | — |
+
+El staff ve las otras pestañas deshabilitadas. La restricción está en tres
+capas: el tab no se puede tocar, la ruta redirige a Vender si se escribe la
+URL a mano, y las reglas de Firestore rechazan la escritura — esa última es la
+única que no se puede saltar desde el navegador.
 
 ## 5. Subir las reglas de seguridad de Firestore
 

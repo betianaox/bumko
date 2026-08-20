@@ -15,6 +15,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(DEMO ? DEMO_USER : null)
   const [authorized, setAuthorized] = useState(DEMO)
   const [role, setRole] = useState(DEMO ? 'admin' : null)
+  // Solo en demo: mirar la app como si fueras staff, para probar los permisos.
+  // No se guarda en ningún lado; recargando volvés a admin.
+  const [verComoStaff, setVerComoStaff] = useState(false)
   const [loading, setLoading] = useState(!DEMO)
   const [error, setError] = useState('')
 
@@ -80,7 +83,19 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, authorized, role, isAdmin: role === 'admin', loading, error, signIn, signOut, demo: DEMO }}
+      value={{
+        user,
+        authorized,
+        role: verComoStaff ? 'staff' : role,
+        isAdmin: role === 'admin' && !verComoStaff,
+        loading,
+        error,
+        signIn,
+        signOut,
+        demo: DEMO,
+        verComoStaff,
+        setVerComoStaff,
+      }}
     >
       {children}
     </AuthContext.Provider>

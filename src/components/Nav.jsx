@@ -18,31 +18,34 @@ const svg = (paths) => (
   </svg>
 )
 
+/* adminOnly: el staff solo registra ventas. Las demás pestañas se muestran
+   deshabilitadas en vez de esconderse, así se entiende que existen y que
+   hay que pedirle acceso a un admin. */
 const TABS = [
   {
     to: '/', label: 'Vender', end: true,
     icon: svg(<path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z" />),
   },
   {
-    to: '/eventos', label: 'Eventos',
+    to: '/eventos', label: 'Eventos', adminOnly: true,
     icon: svg(<>
       <rect x="3" y="5" width="18" height="16" rx="3" />
       <path d="M3 10h18M8 3v4M16 3v4" />
     </>),
   },
   {
-    to: '/productos', label: 'Stock',
+    to: '/productos', label: 'Stock', adminOnly: true,
     icon: svg(<>
       <path d="M3 8l9-5 9 5v8l-9 5-9-5V8z" />
       <path d="M3 8l9 5 9-5M12 13v8" />
     </>),
   },
   {
-    to: '/reportes', label: 'Reportes',
+    to: '/reportes', label: 'Reportes', adminOnly: true,
     icon: svg(<path d="M5 21V11M12 21V4M19 21v-6" />),
   },
   {
-    to: '/usuarios', label: 'Equipo',
+    to: '/usuarios', label: 'Equipo', adminOnly: true,
     icon: svg(<>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" />
@@ -51,7 +54,7 @@ const TABS = [
 ]
 
 export default function Nav({ activeEvent }) {
-  const { signOut, demo } = useAuth()
+  const { signOut, demo, isAdmin, verComoStaff, setVerComoStaff } = useAuth()
   const { theme, toggle } = useTheme()
 
   return (
@@ -66,6 +69,16 @@ export default function Nav({ activeEvent }) {
           </div>
         ) : (
           <div className="event-chip">Sin evento</div>
+        )}
+
+        {/* Solo en demo: para poder ver la app con los permisos del staff */}
+        {demo && (
+          <button
+            className={'role-peek' + (verComoStaff ? ' staff' : '')}
+            onClick={() => setVerComoStaff(!verComoStaff)}
+          >
+            {verComoStaff ? 'staff' : 'admin'}
+          </button>
         )}
 
         <button
@@ -83,17 +96,27 @@ export default function Nav({ activeEvent }) {
 
       {/* La navegación va abajo: es donde llega el pulgar con el celular en una mano */}
       <nav className="tabbar">
-        {TABS.map((t) => (
-          <NavLink
-            key={t.to}
-            to={t.to}
-            end={t.end}
-            className={({ isActive }) => 'tab' + (isActive ? ' active' : '')}
-          >
-            {t.icon}
-            {t.label}
-          </NavLink>
-        ))}
+        {TABS.map((t) => {
+          if (t.adminOnly && !isAdmin) {
+            return (
+              <span key={t.to} className="tab locked" aria-disabled="true" title="Solo para administradores">
+                {t.icon}
+                {t.label}
+              </span>
+            )
+          }
+          return (
+            <NavLink
+              key={t.to}
+              to={t.to}
+              end={t.end}
+              className={({ isActive }) => 'tab' + (isActive ? ' active' : '')}
+            >
+              {t.icon}
+              {t.label}
+            </NavLink>
+          )
+        })}
       </nav>
     </>
   )

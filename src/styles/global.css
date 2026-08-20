@@ -284,6 +284,26 @@ input::placeholder { color: var(--text-faint); }
   transition: background 0.14s ease, opacity 0.14s ease;
 }
 
+/* Cambio de rol de la demo: no es parte de la app real */
+.role-peek {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.role-peek.staff { background: var(--amber); color: var(--on-color); }
+
+/* Deshabilitado pero visible: el staff ve que la sección existe */
+.tab.locked {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
 .tab.active { color: var(--text); }
 
 .tab.active .tab-icon {
