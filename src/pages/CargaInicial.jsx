@@ -7,6 +7,7 @@ import { db } from '../firebase'
 import { toneOf } from '../productTone'
 import TonePicker from '../components/TonePicker'
 import Dialog from '../components/Dialog'
+import { TrashIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resetDemoData } from '../demo/mockDb'
 
@@ -156,7 +157,13 @@ export default function CargaInicial({ activeEvent }) {
               </div>
               <div className="row-actions">
                 <button className="icon-btn" onClick={() => setDialog({ kind: 'restock', product: p })}>＋</button>
-                <button className="icon-btn danger" onClick={() => setDialog({ kind: 'delete', product: p })}>🗑</button>
+                <button
+                  className="icon-btn danger"
+                  aria-label={`Borrar ${p.name}`}
+                  onClick={() => setDialog({ kind: 'delete', product: p })}
+                >
+                  <TrashIcon />
+                </button>
               </div>
             </div>
 

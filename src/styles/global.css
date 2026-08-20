@@ -1107,11 +1107,38 @@ input::placeholder { color: var(--text-faint); }
 .role-btn.selected:disabled { opacity: 1; }
 .icon-btn:disabled { opacity: 0.35; cursor: default; }
 
-.user-flag {
-  margin-top: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--red);
+/* Interruptor activo / suspendido. Sin texto: la posición y el color ya lo
+   dicen, y así la fila entra en cualquier teléfono. */
+.switch {
+  flex: none;
+  width: 52px;
+  height: 32px;
+  padding: 3px;
+  border-radius: 100px;
+  background: var(--surface-3);
+  transition: background 0.16s ease;
+}
+
+.switch .knob {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+
+.switch.on { background: var(--green); }
+.switch.on .knob { transform: translateX(20px); background: #fff; }
+
+.switch:disabled { opacity: 0.4; cursor: default; }
+
+/* El botón del tacho es solo el icono: cuadrado y del alto del switch */
+.user-actions .icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
 }
 
 /* ---------- Eventos y reportes ---------- */

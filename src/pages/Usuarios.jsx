@@ -3,6 +3,8 @@ import { collection, onSnapshot, doc, updateDoc, deleteDoc } from '../data'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import Dialog from '../components/Dialog'
+import Switch from '../components/Switch'
+import { TrashIcon } from '../components/icons'
 
 /* Quién puede usar la app. Cada persona que entra con Google queda registrada
    sola como staff; desde acá un admin le cambia el rol o le corta el acceso.
@@ -96,24 +98,22 @@ export default function Usuarios() {
                   ))}
                 </div>
 
-                <button
-                  className={'icon-btn' + (inactivo ? '' : ' danger')}
+                <Switch
+                  checked={!inactivo}
                   disabled={!isAdmin || ultimoAdmin(u)}
-                  onClick={() => toggleActive(u)}
-                >
-                  {inactivo ? 'Activar' : 'Suspender'}
-                </button>
+                  label={inactivo ? 'Suspendido' : 'Activo'}
+                  onChange={() => toggleActive(u)}
+                />
 
                 <button
                   className="icon-btn danger"
                   disabled={!isAdmin || ultimoAdmin(u)}
                   onClick={() => setDialog({ user: u })}
+                  aria-label="Sacar del equipo"
                 >
-                  🗑
+                  <TrashIcon />
                 </button>
               </div>
-
-              {inactivo && <div className="user-flag">Sin acceso a la app</div>}
             </div>
           )
         })}
