@@ -127,7 +127,7 @@ input::placeholder { color: var(--text-faint); }
 /* El logo manda el alto de la barra. width auto + los atributos width/height
    en el <img> evitan que el header salte mientras la imagen carga. */
 .brand-logo {
-  height: 26px;
+  height: 30px;
   width: auto;
   margin-right: auto;
   display: block;

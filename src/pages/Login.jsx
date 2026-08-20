@@ -6,7 +6,7 @@ export default function Login() {
   if (loading) {
     return (
       <div className="login-screen">
-        <img className="login-logo" src="/logo.webp" alt="Stokki" width="800" height="230" />
+        <img className="login-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
       </div>
     )
   }
@@ -14,7 +14,7 @@ export default function Login() {
   if (user && !authorized) {
     return (
       <div className="login-screen">
-        <img className="login-logo" src="/logo.webp" alt="Stokki" width="800" height="230" />
+        <img className="login-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
         <p className="login-sub">
           Entraste como <strong>{user.email}</strong>, pero todavía no estás
           habilitado en el equipo. Pedile a un admin que te agregue.
@@ -26,7 +26,7 @@ export default function Login() {
 
   return (
     <div className="login-screen">
-      <img className="login-logo" src="/logo.webp" alt="Stokki" width="800" height="230" />
+      <img className="login-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
       <p className="login-sub">Control de stock para la noche. Entrá con tu cuenta de Google del equipo.</p>
       <button className="google-btn" onClick={signIn}>
         <GoogleIcon />

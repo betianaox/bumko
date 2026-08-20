@@ -53,7 +53,7 @@ export default function Nav({ activeEvent }) {
   return (
     <>
       <div className="topbar">
-        <img className="brand-logo" src="/logo.webp" alt="Stokki" width="800" height="230" />
+        <img className="brand-logo" src="/logo.png" alt="Stokki" width="800" height="230" />
 
         {activeEvent ? (
           <div className="event-chip live">
