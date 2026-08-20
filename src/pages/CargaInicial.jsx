@@ -134,7 +134,7 @@ export default function CargaInicial({ activeEvent }) {
         </div>
 
         <div className="field-label">Color del botón</div>
-        <TonePicker value={tone} name={name} onChange={setTone} />
+        <TonePicker value={tone} onChange={setTone} />
 
         <button className="btn-primary" disabled={!canAdd} onClick={handleAdd}><span>＋</span> Agregar producto</button>
       </div>
@@ -169,7 +169,7 @@ export default function CargaInicial({ activeEvent }) {
 
             {editingTone === p.id && (
               <div className="tone-editor">
-                <TonePicker value={p.tone || null} name={p.name} onChange={(t) => handleTone(p, t)} />
+                <TonePicker value={p.tone || null} onChange={(t) => handleTone(p, t)} />
               </div>
             )}
           </div>

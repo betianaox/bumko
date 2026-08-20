@@ -358,14 +358,31 @@ input::placeholder { color: var(--text-faint); }
 }
 
 /* Tonos planos: cada producto cae siempre en el mismo color */
-.punch.tone-1 { background: var(--t1); }
-.punch.tone-2 { background: var(--t2); }
-.punch.tone-3 { background: var(--t3); }
-.punch.tone-4 { background: var(--t4); }
-.punch.tone-5 { background: var(--t5); }
-.punch.tone-6 { background: var(--t6); }
-.punch.tone-7 { background: var(--t7); }
-.punch.tone-8 { background: var(--t8); }
+/* Cada tono publica su color y su versión en rgb. No lleva prefijo a propósito:
+   lo usan el bloque de venta y también las muestras del selector de color,
+   así lo que elegís es exactamente lo que vas a ver esa noche. */
+.tone-1 { --tone: var(--t1); --tone-rgb: 224, 16, 85; }
+.tone-2 { --tone: var(--t2); --tone-rgb: 0, 133, 122; }
+.tone-3 { --tone: var(--t3); --tone-rgb: 184, 106, 0; }
+.tone-4 { --tone: var(--t4); --tone-rgb: 106, 63, 240; }
+.tone-5 { --tone: var(--t5); --tone-rgb: 31, 111, 235; }
+.tone-6 { --tone: var(--t6); --tone-rgb: 210, 69, 15; }
+.tone-7 { --tone: var(--t7); --tone-rgb: 26, 143, 69; }
+.tone-8 { --tone: var(--t8); --tone-rgb: 181, 36, 144; }
+
+/* Relleno translúcido, sin borde: el color sigue identificando el producto
+   pero no encandila en una pantalla al 100% de brillo a media luz.
+   La chapita del stock sí va con el tono pleno, y es la que ancla el color.
+   (Si en algún momento se quiere el borde, es agregar acá:
+   border: 2px solid var(--tone); y subir el padding en 2px.) */
+.punch[class*='tone-'] {
+  background: rgba(var(--tone-rgb), 0.22);
+}
+
+.punch[class*='tone-'] .stock-badge { background: var(--tone); }
+
+/* El aviso de stock bajo tiene que ganarle al tono del producto */
+.punch.low[class*='tone-'] .stock-badge { background: #e6001e; }
 
 /* Poco stock: el disco mantiene su color y alarma el número. Rojo pleno con
    un latido lento — se detecta con el rabo del ojo sin tener que leer nada. */
@@ -879,24 +896,36 @@ input::placeholder { color: var(--text-faint); }
 /* El anillo marca el elegido sin cambiarle el color a la muestra */
 .sw.selected { box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 3px var(--text); }
 
-.sw.auto {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--text);
-  opacity: 0.55;
+/* La muestra se pinta igual que el bloque: relleno translúcido y un punto
+   pleno adentro, que es el equivalente de la chapita del stock. */
+.sw[class*='tone-'] {
+  background: rgba(var(--tone-rgb), 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.sw.auto.selected { opacity: 1; }
+.sw[class*='tone-']::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--tone);
+}
 
-.sw.tone-1 { background: var(--t1); }
-.sw.tone-2 { background: var(--t2); }
-.sw.tone-3 { background: var(--t3); }
-.sw.tone-4 { background: var(--t4); }
-.sw.tone-5 { background: var(--t5); }
-.sw.tone-6 { background: var(--t6); }
-.sw.tone-7 { background: var(--t7); }
-.sw.tone-8 { background: var(--t8); }
+/* "Auto": pastilla con texto, no una muestra de color. El color que le toca
+   depende del nombre y coincidiría con alguna de las muestras de al lado. */
+.sw-auto {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.sw-auto.selected { background: var(--text); color: var(--on-color); }
 
 .tone-editor {
   background: var(--surface);
@@ -915,14 +944,20 @@ input::placeholder { color: var(--text-faint); }
   padding: 0;
 }
 
-.row-sw.tone-1 { background: var(--t1); }
-.row-sw.tone-2 { background: var(--t2); }
-.row-sw.tone-3 { background: var(--t3); }
-.row-sw.tone-4 { background: var(--t4); }
-.row-sw.tone-5 { background: var(--t5); }
-.row-sw.tone-6 { background: var(--t6); }
-.row-sw.tone-7 { background: var(--t7); }
-.row-sw.tone-8 { background: var(--t8); }
+.row-sw[class*='tone-'] {
+  background: rgba(var(--tone-rgb), 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-sw[class*='tone-']::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--tone);
+}
 
 /* ---------- Caja inicial ---------- */
 
