@@ -121,12 +121,15 @@ export default function Reportes() {
       if (!map[b.key]) {
         map[b.key] = {
           label: b.label, sub: b.sub, sort: b.sort,
-          total: 0, count: 0, gifts: 0, customs: 0,
+          total: 0, costo: 0, count: 0, gifts: 0, customs: 0,
           giftReasons: {}, products: {}, users: {},
         }
       }
       const g = map[b.key]
       g.total += s.amount || 0
+      // Lo que salió cuesta igual aunque se haya regalado: el costo suma
+      // siempre, sin mirar cómo salió la unidad.
+      g.costo += s.costPrice || 0
       g.count += 1
       if (s.mode === 'gift') {
         g.gifts += 1
@@ -146,10 +149,11 @@ export default function Reportes() {
   /* Los gráficos miran todo el período filtrado junto, no grupo por grupo:
      la pregunta ahí es "cómo viene el mes", no "qué pasó el martes". */
   const resumen = useMemo(() => {
-    const total = { plata: 0, unidades: 0, regalos: 0, especiales: 0, productos: {}, gente: {} }
+    const total = { plata: 0, costo: 0, unidades: 0, regalos: 0, especiales: 0, productos: {}, gente: {} }
 
     for (const s of filtered) {
       total.plata += s.amount || 0
+      total.costo += s.costPrice || 0
       total.unidades += 1
       if (s.mode === 'gift') total.regalos += 1
       if (s.mode === 'custom') total.especiales += 1
@@ -271,6 +275,21 @@ export default function Reportes() {
             </div>
           </div>
 
+          {/* La plata de verdad: lo que costó lo que salió, y lo que quedó.
+              Va aparte de los otros tres porque es otra pregunta. */}
+          <div className="event-stats dos" style={{ marginTop: 0, marginBottom: 14 }}>
+            <div className="stat-box">
+              <div className="val">${resumen.costo.toLocaleString('es-AR')}</div>
+              <div className="lbl">Costo</div>
+            </div>
+            <div className="stat-box">
+              <div className={'val' + (resumen.plata - resumen.costo < 0 ? ' malo' : ' bueno')}>
+                ${(resumen.plata - resumen.costo).toLocaleString('es-AR')}
+              </div>
+              <div className="lbl">Resultado</div>
+            </div>
+          </div>
+
           <Columnas
             title={mode === 'mes' ? 'Recaudado por mes' : 'Recaudado por día'}
             data={resumen.serie}
@@ -315,6 +334,19 @@ export default function Reportes() {
               <div className="stat-box">
                 <div className="val">{g.gifts}</div>
                 <div className="lbl">Regalos</div>
+              </div>
+            </div>
+
+            <div className="event-stats dos">
+              <div className="stat-box">
+                <div className="val">${g.costo.toLocaleString('es-AR')}</div>
+                <div className="lbl">Costo</div>
+              </div>
+              <div className="stat-box">
+                <div className={'val' + (g.total - g.costo < 0 ? ' malo' : ' bueno')}>
+                  ${(g.total - g.costo).toLocaleString('es-AR')}
+                </div>
+                <div className="lbl">Resultado</div>
               </div>
             </div>
 

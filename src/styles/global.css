@@ -86,8 +86,11 @@
   --invert-bg: #ffffff;
   --invert-ink: #0b0b10;
 
-  /* Verde para escribir sobre fondo translúcido, no para rellenar */
+  /* Colores para escribir, no para rellenar: el de relleno casi nunca sirve
+     como texto, y menos cambiando de tema. */
   --green-ink: #4ade80;
+  --amber-ink: #ffb020;
+  --red-ink: #ff6b5c;
 
   /* El bloque de producto: relleno translúcido del tono y texto blanco */
   --tone-fill: 0.22;
@@ -118,6 +121,8 @@
   --invert-ink: #ffffff;
 
   --green-ink: #157a3a;
+  --amber-ink: #8a5a00;
+  --red-ink: #c62a1c;
 
   /* Sobre fondo claro el texto blanco no se lee en un relleno translúcido:
      el bloque baja el relleno y escribe con el color del propio tono. */
@@ -1315,7 +1320,7 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .eye svg { width: 17px; height: 17px; }
-.eye.off { color: var(--amber); }
+.eye.off { color: var(--amber-ink); }
 .product-row .meta { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); margin-top: 2px; }
 
 .row-actions { display: flex; gap: 6px; flex: none; }
@@ -1393,6 +1398,20 @@ input::placeholder { color: var(--text-faint); }
   background: var(--surface-3);
   color: var(--text-dim);
 }
+
+/* El arqueo del cierre: si faltó plata se ve, y si sobró también */
+.arqueo {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.arqueo.ok { background: rgba(var(--green-rgb), 0.16); color: var(--green-ink); }
+.arqueo.falta { background: rgba(255, 77, 61, 0.14); color: var(--red-ink); }
+.arqueo.sobra { background: rgba(255, 176, 32, 0.16); color: var(--amber-ink); }
 
 /* Cuándo se sumó al equipo */
 .user-fechas {
@@ -1639,6 +1658,14 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .stat-box .val { font-family: var(--font-mono); font-weight: 700; font-size: 21px; }
+
+/* El resultado se lee de un vistazo: verde si quedó plata, rojo si no */
+.stat-box .val.bueno { color: var(--green-ink); }
+.stat-box .val.malo { color: var(--red-ink); }
+
+/* Costo y resultado van en dos columnas: son dos números más grandes y
+   menos frecuentes que los tres de arriba. */
+.event-stats.dos { grid-template-columns: repeat(2, 1fr); }
 .stat-box .lbl {
   font-size: 11px;
   color: var(--text-faint);

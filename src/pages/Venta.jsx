@@ -74,6 +74,11 @@ export default function Venta({ activeEvent }) {
       productName: product.name,
       mode: saleData.mode,
       amount: saleData.amount,
+      /* El costo se copia acá y no se busca después en el producto: si mañana
+         cambia el precio de compra, las noches ya cerradas tienen que seguir
+         diciendo lo que dijeron. Lo mismo vale para un regalo, que cuesta
+         igual aunque no se haya cobrado. */
+      costPrice: product.costPrice || 0,
       reason: saleData.reason || null,
       who: saleData.who || null,
       eventId: activeEvent ? activeEvent.id : null,

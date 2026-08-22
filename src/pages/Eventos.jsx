@@ -70,13 +70,31 @@ export default function Eventos({ activeEvent }) {
     setOpeningCash(String(savedCash || CAJA_SUGERIDA))
   }
 
-  const handleStop = async () => {
+  /* El arqueo: al cerrar se cuenta la caja y se guarda lo contado junto a lo
+     esperado. Sin esto, la app te dice cuánto debería haber pero nadie se
+     entera nunca de cuánto había — que es la mitad que importa.
+
+     Los totales quedan congelados en el evento, no se recalculan después: si
+     mañana alguien corrige un precio, la noche cerrada no cambia. */
+  const handleStop = async (contado) => {
     if (!activeEvent) return
     setConfirmStop(false)
+
+    const contadoNum = contado === '' || contado == null ? null : Number(contado)
+
     await updateDoc(barDoc(barId, 'events', activeEvent.id), {
       status: 'closed',
       endedAt: serverTimestamp(),
-      expectedCash: esperado,   // lo que tendría que haber en la caja al cerrar
+      expectedCash: esperado,
+      countedCash: contadoNum,
+      cashDiff: contadoNum == null ? null : contadoNum - esperado,
+      resumen: {
+        vendido: recaudado,
+        costo: costoTotal,
+        resultado: recaudado - costoTotal,
+        unidades: liveSales.length,
+        regalados,
+      },
     })
   }
 
@@ -88,6 +106,7 @@ export default function Eventos({ activeEvent }) {
   }
 
   const recaudado = liveSales.reduce((sum, s) => sum + (s.amount || 0), 0)
+  const costoTotal = liveSales.reduce((sum, s) => sum + (s.costPrice || 0), 0)
   const regalados = liveSales.filter((s) => s.mode === 'gift').length
   const inicial = activeEvent?.openingCash || 0
   const esperado = inicial + recaudado
@@ -174,8 +193,9 @@ export default function Eventos({ activeEvent }) {
 
       {confirmStop && activeEvent && (
         <Dialog
-          title={`¿Cerrar ${activeEvent.name}?`}
-          sub={`Deja de sumar ventas. En la caja tendría que haber ${money(esperado)}.`}
+          title="Cerrar la noche"
+          sub={`Contá la caja y poné cuánto hay. Según lo registrado tendría que haber ${money(esperado)}.`}
+          input={{ type: 'number', inputMode: 'numeric', initial: String(esperado) }}
           confirmLabel="Cerrar evento"
           danger
           onConfirm={handleStop}
@@ -184,15 +204,56 @@ export default function Eventos({ activeEvent }) {
       )}
 
       <div className="section-title">Eventos anteriores</div>
-      {events.filter((e) => e.status === 'closed').map((e) => (
-        <div className="event-card" key={e.id}>
-          <div className="event-name">{e.name}</div>
-          <div className="event-meta">
-            {e.startedAt?.toDate ? e.startedAt.toDate().toLocaleDateString('es-AR') : ''}
-            {e.openingCash ? ` · arrancó con ${money(e.openingCash)} en caja` : ''}
+      {events.filter((e) => e.status === 'closed').map((e) => {
+        // La diferencia solo existe si alguien contó la caja al cerrar
+        const dif = typeof e.cashDiff === 'number' ? e.cashDiff : null
+
+        return (
+          <div className="event-card" key={e.id}>
+            <div className="event-name">{e.name}</div>
+            <div className="event-meta">
+              {e.startedAt?.toDate ? e.startedAt.toDate().toLocaleDateString('es-AR') : ''}
+              {e.openingCash ? ` · arrancó con ${money(e.openingCash)}` : ''}
+            </div>
+
+            {e.resumen && (
+              <>
+                <div className="event-stats">
+                  <div className="stat-box">
+                    <div className="val">{money(e.resumen.vendido)}</div>
+                    <div className="lbl">Vendido</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className="val">{money(e.resumen.costo)}</div>
+                    <div className="lbl">Costo</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className={'val' + (e.resumen.resultado < 0 ? ' malo' : ' bueno')}>
+                      {money(e.resumen.resultado)}
+                    </div>
+                    <div className="lbl">Resultado</div>
+                  </div>
+                </div>
+
+                <div className="event-meta" style={{ marginTop: 10 }}>
+                  {e.resumen.unidades} salieron · {e.resumen.regalados} regalados
+                </div>
+              </>
+            )}
+
+            {/* El arqueo: qué había contra qué tenía que haber */}
+            {dif !== null && (
+              <div className={'arqueo' + (dif === 0 ? ' ok' : dif > 0 ? ' sobra' : ' falta')}>
+                {dif === 0
+                  ? `Caja justa: ${money(e.countedCash)}`
+                  : dif > 0
+                    ? `Sobraron ${money(dif)} — contaste ${money(e.countedCash)} de ${money(e.expectedCash)}`
+                    : `Faltaron ${money(-dif)} — contaste ${money(e.countedCash)} de ${money(e.expectedCash)}`}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        )
+      })}
       {events.filter((e) => e.status === 'closed').length === 0 && (
         <div className="empty-state">Todavía no cerraste ningún evento.</div>
       )}
