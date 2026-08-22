@@ -7,6 +7,8 @@ import { PlayIcon, StopIcon } from '../components/icons'
 
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
 
+const CAJA_SUGERIDA = 10000   // arranque razonable cuando todavía no se guardó ninguna
+
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
 // "Sábado 23/08". Alcanza para distinguir una noche de otra, y si el evento
@@ -21,7 +23,7 @@ export default function Eventos({ activeEvent }) {
   const { barId } = useAuth()
   const [events, setEvents] = useState([])
   const [newName, setNewName] = useState(nombreSugerido)
-  const [openingCash, setOpeningCash] = useState('')
+  const [openingCash, setOpeningCash] = useState(String(CAJA_SUGERIDA))
   const [liveSales, setLiveSales] = useState([])
   const [editingCash, setEditingCash] = useState(null)
   const [confirmStop, setConfirmStop] = useState(false)
@@ -46,9 +48,10 @@ export default function Eventos({ activeEvent }) {
     if (!barId) return
     return onSnapshot(barCol(barId, 'settings'), (snap) => {
       const s = snap.docs.find((d) => d.id === 'caja')
-      const guardada = s ? s.data().openingCash || 0 : 0
-      setSavedCash(guardada)
-      setOpeningCash((actual) => (actual === '' && guardada ? String(guardada) : actual))
+      // Si hay una caja guardada, gana sobre la sugerida: es la real del bar.
+      const guardada = s ? s.data().openingCash : null
+      setSavedCash(guardada || 0)
+      if (guardada) setOpeningCash((actual) => (actual === String(CAJA_SUGERIDA) ? String(guardada) : actual))
     })
   }, [barId])
 
@@ -64,7 +67,7 @@ export default function Eventos({ activeEvent }) {
       endedAt: null,
     })
     setNewName(nombreSugerido())
-    setOpeningCash('')
+    setOpeningCash(String(savedCash || CAJA_SUGERIDA))
   }
 
   const handleStop = async () => {
