@@ -983,84 +983,39 @@ input::placeholder { color: var(--text-faint); }
 
 .chart-empty { color: var(--text-faint); font-size: 14px; }
 
-/* Serie en el tiempo */
-
-.cols {
+/* Encabezado del gráfico: el título a la izquierda, el total a la derecha */
+.chart-head {
   display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 150px;
-}
-
-.col {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.col-track {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-}
-
-.col-bar {
-  width: 100%;
-  background: var(--accent);
-  border-radius: 4px 4px 0 0;
-  min-height: 2px;
-}
-
-.col-lbl {
-  font-size: 10px;
-  color: var(--text-faint);
-  text-align: center;
-  margin-top: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.chart-foot {
-  display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-faint);
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-/* Ranking */
+.chart-head .chart-title { margin-bottom: 0; }
 
-.hbars { display: flex; flex-direction: column; gap: 10px; }
-
-.hbar {
-  display: grid;
-  grid-template-columns: minmax(70px, 30%) 1fr auto;
-  align-items: center;
-  gap: 10px;
-}
-
-.hbar-lbl {
-  font-size: 14px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
+.chart-total {
+  font-weight: 700;
+  font-size: 17px;
   white-space: nowrap;
 }
 
-.hbar-track { background: var(--surface-2); border-radius: 4px; height: 14px; }
-
-.hbar-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 4px;
-  min-width: 3px;
+/* El cartelito que sigue al dedo */
+.tip {
+  background: var(--surface-3);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
 }
 
-.hbar-val { font-weight: 700; font-size: 14px; min-width: 28px; text-align: right; }
+.tip-lbl { color: var(--text-faint); margin-bottom: 4px; }
+
+.tip-val { display: flex; align-items: center; gap: 7px; }
+
+.tip-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+.tip-name { color: var(--text-dim); }
 
 /* Parte del todo */
 

@@ -6,7 +6,7 @@
    ============================================================ */
 
 // Subir el número descarta lo guardado en el navegador y vuelve a sembrar.
-const STORAGE_KEY = 'bumko-demo-db-v2'
+const STORAGE_KEY = 'bumko-demo-db-v3'
 
 // ---------- Timestamps ----------
 // Firestore devuelve objetos con .toDate(); acá lo replicamos.
@@ -54,6 +54,93 @@ export const DEMO_BAR = 'bar-demo'
 
 const bajo = (sub) => `bares/${DEMO_BAR}/${sub}`
 
+/* Un mes de ventas inventadas, para poder mirar cómo quedan los reportes sin
+   esperar a que pase una noche de verdad. Los números salen de una secuencia
+   fija, no de Math.random: así la demo se ve igual en todos los teléfonos y
+   dos capturas de pantalla se pueden comparar. */
+function seedVentas(store) {
+  let semilla = 7
+  const azar = (n) => {
+    semilla = (semilla * 1103515245 + 12345) % 2147483648
+    return semilla % n
+  }
+
+  const productos = SEED_PRODUCTS.map((p, i) => ({ id: `demo-p${i}`, ...p }))
+  const gente = [
+    { email: 'sofia@bumko.app', name: 'Sofía Ramírez' },
+    { email: 'juan@bumko.app', name: 'Juan Pérez' },
+    { email: 'demo@bumko.app', name: 'Usuario demo' },
+  ]
+  const motivos = ['Invitación del dueño', 'Cortesía a cliente', 'Staff', 'Error de cobro']
+
+  // Tres noches: dos cerradas y la del último fin de semana
+  const noches = [
+    { dias: 22, nombre: 'Viernes', caja: 15000, ventas: 74 },
+    { dias: 15, nombre: 'Sábado', caja: 20000, ventas: 118 },
+    { dias: 8, nombre: 'Sábado', caja: 20000, ventas: 96 },
+  ]
+
+  noches.forEach((noche, n) => {
+    const inicio = new Date()
+    inicio.setDate(inicio.getDate() - noche.dias)
+    inicio.setHours(22, 0, 0, 0)
+
+    const eventId = `demo-ev${n}`
+    let vendido = 0
+    let costo = 0
+    let regalados = 0
+
+    for (let i = 0; i < noche.ventas; i++) {
+      const p = productos[azar(productos.length)]
+      const quien = gente[azar(gente.length)]
+
+      // La noche arranca floja, explota a las 2 y se apaga a las 5
+      const cuando = new Date(inicio.getTime() + (i / noche.ventas) * 7 * 3600 * 1000 + azar(600000))
+
+      const tirada = azar(100)
+      const modo = tirada < 8 ? 'gift' : tirada < 16 ? 'custom' : 'regular'
+      const monto = modo === 'gift' ? 0
+        : modo === 'custom' ? Math.round((p.salePrice * (60 + azar(30))) / 100 / 500) * 500
+          : p.salePrice
+
+      vendido += monto
+      costo += p.costPrice
+      if (modo === 'gift') regalados += 1
+
+      store[bajo('sales')][`demo-s${n}-${i}`] = {
+        productId: p.id,
+        productName: p.name,
+        mode: modo,
+        amount: monto,
+        costPrice: p.costPrice,
+        reason: modo === 'gift' ? motivos[azar(motivos.length)] : null,
+        who: null,
+        eventId,
+        dev: null,
+        userEmail: quien.email,
+        userName: quien.name,
+        createdAt: makeTs(cuando),
+      }
+    }
+
+    const cierre = new Date(inicio.getTime() + 7 * 3600 * 1000)
+    // La última noche cerró con la caja justa; las otras dos, no tanto
+    const diferencia = [-2500, 0, 1500][n]
+
+    store[bajo('events')][eventId] = {
+      name: `${noche.nombre} ${String(inicio.getDate()).padStart(2, '0')}/${String(inicio.getMonth() + 1).padStart(2, '0')}`,
+      status: 'closed',
+      openingCash: noche.caja,
+      startedAt: makeTs(inicio),
+      endedAt: makeTs(cierre),
+      expectedCash: noche.caja + vendido,
+      countedCash: noche.caja + vendido + diferencia,
+      cashDiff: diferencia,
+      resumen: { vendido, costo, resultado: vendido - costo, unidades: noche.ventas, regalados },
+    }
+  })
+}
+
 function freshStore() {
   const store = {
     bares: { [DEMO_BAR]: { name: 'Bar de ejemplo', ownerEmail: 'demo@bumko.app', autoJoin: true } },
@@ -73,6 +160,8 @@ function freshStore() {
     store[bajo('equipo')][id] = { ...u }
     store.usuarios[id] = { barId: DEMO_BAR }
   }
+
+  seedVentas(store)
 
   return store
 }

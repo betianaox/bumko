@@ -1,49 +1,117 @@
+import { useEffect, useState } from 'react'
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts'
+import { useTheme } from '../context/ThemeContext'
+
 /* Los gráficos de Reportes.
 
-   Todo se dibuja con divs y un poco de SVG: son cuatro formas simples y no
-   justifican una librería de 300 KB en una app que se abre desde el celular
-   en un bar. Los colores salen de tokens, así funcionan en los dos temas.
-
-   Cada barra lleva su número escrito al lado: el color ubica, el número
-   informa. Nada depende de poder distinguir dos tonos parecidos. */
+   Recharts necesita colores concretos, no variables de CSS, así que los tokens
+   del tema se leen del documento y se vuelven a leer cuando el tema cambia.
+   De esa forma los gráficos siguen saliendo de la misma paleta que el resto de
+   la app y no hay una segunda lista de colores que mantener. */
 
 const money = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR')
+const corto = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n))
 
-/* ---------- Serie en el tiempo ---------- */
+function useTokens() {
+  const { theme } = useTheme()
+  const [t, setT] = useState({})
+
+  useEffect(() => {
+    const css = getComputedStyle(document.documentElement)
+    const leer = (n) => css.getPropertyValue(n).trim()
+    setT({
+      accent: leer('--accent'),
+      c1: leer('--c1'),
+      c2: leer('--c2'),
+      c3: leer('--c3'),
+      texto: leer('--text'),
+      tenue: leer('--text-faint'),
+      linea: leer('--line'),
+      superficie: leer('--surface'),
+      superficie2: leer('--surface-2'),
+    })
+  }, [theme])
+
+  return t
+}
+
+/* El cartelito que sigue al dedo. El de fábrica viene con estilos de página
+   web; este usa las superficies y las tipografías de la app. */
+function Globo({ active, payload, label, format = money }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="tip">
+      <div className="tip-lbl">{label ?? payload[0]?.payload?.label}</div>
+      {payload.map((p) => (
+        <div className="tip-val" key={p.name}>
+          <span className="tip-dot" style={{ background: p.color || p.fill }} />
+          {p.name !== 'value' && <span className="tip-name">{p.name}</span>}
+          <strong>{format(p.value)}</strong>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ---------- Cómo viene el período ---------- */
 
 export function Columnas({ title, data, format = money }) {
-  if (data.length === 0) return null
+  const t = useTokens()
+  if (data.length === 0 || !t.accent) return null
 
-  const max = Math.max(...data.map((d) => d.value), 1)
-  const pico = data.find((d) => d.value === max)
-
-  /* Con un mes entero cada columna mide unos 7px: ahí no entra ninguna
-     etiqueta y ponerlas igual solo ensucia. Se etiqueta cuando son pocas;
-     si no, el pie del gráfico dice desde dónde hasta dónde va. */
-  const conEtiquetas = data.length <= 10
+  const total = data.reduce((s, d) => s + d.value, 0)
 
   return (
     <div className="chart-card">
-      <div className="chart-title">{title}</div>
-
-      <div className="cols">
-        {data.map((d) => (
-          <div className="col" key={d.label} title={`${d.label}: ${format(d.value)}`}>
-            <div className="col-track">
-              <div
-                className={'col-bar' + (d.value === max ? ' peak' : '')}
-                style={{ height: `${Math.max((d.value / max) * 100, 2)}%` }}
-              />
-            </div>
-            {conEtiquetas && <div className="col-lbl">{d.short}</div>}
-          </div>
-        ))}
+      <div className="chart-head">
+        <div className="chart-title">{title}</div>
+        <div className="chart-total">{format(total)}</div>
       </div>
 
-      <div className="chart-foot">
-        <span>{data[0].label} → {data[data.length - 1].label}</span>
-        <span>pico {format(max)}{pico && data.length > 10 ? ` · ${pico.label}` : ''}</span>
-      </div>
+      <ResponsiveContainer width="100%" height={190}>
+        <AreaChart data={data} margin={{ top: 6, right: 4, left: -18, bottom: 0 }}>
+          <defs>
+            {/* El relleno se desvanece hacia abajo: la línea es el dato, el
+                área solo ayuda a leer el volumen. */}
+            <linearGradient id="gradAccent" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={t.accent} stopOpacity={0.45} />
+              <stop offset="100%" stopColor={t.accent} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid stroke={t.linea} vertical={false} />
+          <XAxis
+            dataKey="short"
+            tick={{ fill: t.tenue, fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            minTickGap={18}
+          />
+          <YAxis
+            tick={{ fill: t.tenue, fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            width={46}
+            tickFormatter={corto}
+          />
+          <Tooltip content={<Globo format={format} />} cursor={{ stroke: t.tenue, strokeDasharray: 4 }} />
+
+          <Area
+            type="monotone"
+            dataKey="value"
+            name="value"
+            stroke={t.accent}
+            strokeWidth={2.5}
+            fill="url(#gradAccent)"
+            dot={false}
+            activeDot={{ r: 5, stroke: t.superficie, strokeWidth: 2 }}
+            animationDuration={500}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -51,7 +119,7 @@ export function Columnas({ title, data, format = money }) {
 /* ---------- Ranking ---------- */
 
 export function Barras({ title, data, format = (n) => n, empty }) {
-  const max = Math.max(...data.map((d) => d.value), 1)
+  const t = useTokens()
 
   if (data.length === 0) {
     return (
@@ -61,21 +129,40 @@ export function Barras({ title, data, format = (n) => n, empty }) {
       </div>
     )
   }
+  if (!t.accent) return null
 
   return (
     <div className="chart-card">
       <div className="chart-title">{title}</div>
-      <div className="hbars">
-        {data.map((d) => (
-          <div className="hbar" key={d.label}>
-            <div className="hbar-lbl">{d.label}</div>
-            <div className="hbar-track">
-              <div className="hbar-fill" style={{ width: `${(d.value / max) * 100}%` }} />
-            </div>
-            <div className="hbar-val">{format(d.value)}</div>
-          </div>
-        ))}
-      </div>
+
+      <ResponsiveContainer width="100%" height={data.length * 38 + 10}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 34, left: 0, bottom: 0 }}>
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="label"
+            tick={{ fill: t.tenue, fontSize: 13 }}
+            tickLine={false}
+            axisLine={false}
+            width={92}
+          />
+          <Tooltip content={<Globo format={format} />} cursor={{ fill: t.superficie2 }} />
+
+          <Bar
+            dataKey="value"
+            name="value"
+            radius={[0, 6, 6, 0]}
+            barSize={16}
+            animationDuration={500}
+            label={{ position: 'right', fill: t.texto, fontSize: 13, fontWeight: 700, formatter: format }}
+          >
+            {/* El primero destacado: en un ranking lo que importa es quién gana */}
+            {data.map((d, i) => (
+              <Cell key={d.label} fill={i === 0 ? t.accent : t.superficie2} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -83,13 +170,18 @@ export function Barras({ title, data, format = (n) => n, empty }) {
 /* ---------- Cómo salió cada unidad ---------- */
 
 export function Composicion({ title, parts }) {
+  const t = useTokens()
   const total = parts.reduce((s, p) => s + p.value, 0)
-  if (total === 0) return null
+  if (total === 0 || !t.c1) return null
+
+  const color = { c1: t.c1, c2: t.c2, c3: t.c3 }
 
   return (
     <div className="chart-card">
       <div className="chart-title">{title}</div>
 
+      {/* Una sola barra partida: la pregunta es qué proporción se llevó cada
+          forma de salir, y la barra lo contesta sin hacer comparar ángulos. */}
       <div className="stack">
         {parts.filter((p) => p.value > 0).map((p) => (
           <div
@@ -101,11 +193,10 @@ export function Composicion({ title, parts }) {
         ))}
       </div>
 
-      {/* La leyenda lleva el número: el color agrupa, el texto es el dato */}
       <div className="legend">
         {parts.map((p) => (
           <div className="legend-item" key={p.label}>
-            <span className={'dot ' + p.tone} />
+            <span className="dot" style={{ background: color[p.tone] }} />
             {p.label}
             <strong>{p.value}</strong>
             <span className="pct">{Math.round((p.value / total) * 100)}%</span>

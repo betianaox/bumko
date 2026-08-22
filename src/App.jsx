@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { onSnapshot, query, where, limit } from './data'
 import { barCol } from './bar'
@@ -8,9 +8,13 @@ import Nav from './components/Nav'
 import Venta from './pages/Venta'
 import CargaInicial from './pages/CargaInicial'
 import Eventos from './pages/Eventos'
-import Reportes from './pages/Reportes'
 import Usuarios from './pages/Usuarios'
 import Pendiente from './pages/Pendiente'
+
+/* Reportes se carga aparte: es la única pantalla que usa la librería de
+   gráficos, y son 117 KB que no tiene por qué bajar quien solo va a vender.
+   Se descarga la primera vez que se abre esa pestaña. */
+const Reportes = lazy(() => import('./pages/Reportes'))
 
 /* El tab deshabilitado evita el clic, pero la URL se puede escribir a mano:
    la restricción de verdad va acá. Las reglas de Firestore son la tercera
@@ -41,6 +45,7 @@ export default function App() {
       <Nav activeEvent={activeEvent} />
       <div className="main">
         {pendiente ? <Pendiente /> : (
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Venta activeEvent={activeEvent} />} />
           <Route element={<SoloAdmin isAdmin={isAdmin} />}>
@@ -51,6 +56,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
         )}
       </div>
     </div>
