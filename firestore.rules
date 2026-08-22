@@ -33,6 +33,10 @@ service cloud.firestore {
         // Anotarse solo: siempre staff y siempre apagado, lo habilita un admin
         allow create: if request.auth != null && yo() == email && abierta(b)
           && request.resource.data.role == 'staff' && request.resource.data.active == false;
+        // Cada uno puede poner al día su nombre y su foto — y nada más: el rol
+        // y el acceso no se tocan a sí mismos.
+        allow update: if request.auth != null && yo() == email
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'photo']);
         // Nombrar o destituir devs es cosa de devs
         allow update: if esAdmin(b) && (request.resource.data.role != 'dev' || esDev(b)) && (resource.data.role != 'dev' || esDev(b));
         allow delete: if esAdmin(b) && (resource.data.role != 'dev' || esDev(b));
