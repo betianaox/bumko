@@ -7,10 +7,20 @@ import { PlayIcon, StopIcon } from '../components/icons'
 
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
 
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+// "Sábado 23/08". Alcanza para distinguir una noche de otra, y si el evento
+// tiene nombre propio se escribe encima.
+function nombreSugerido(d = new Date()) {
+  const dia = String(d.getDate()).padStart(2, '0')
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  return `${DIAS[d.getDay()]} ${dia}/${mes}`
+}
+
 export default function Eventos({ activeEvent }) {
   const { barId } = useAuth()
   const [events, setEvents] = useState([])
-  const [newName, setNewName] = useState('')
+  const [newName, setNewName] = useState(nombreSugerido)
   const [openingCash, setOpeningCash] = useState('')
   const [liveSales, setLiveSales] = useState([])
   const [editingCash, setEditingCash] = useState(null)
@@ -30,17 +40,20 @@ export default function Eventos({ activeEvent }) {
     return onSnapshot(q, (snap) => setLiveSales(snap.docs.map((d) => d.data()).filter((s) => !s.dev)))
   }, [activeEvent, barId])
 
-  // La caja que se dejó cargada desde Stock es el valor por defecto de la noche.
+  // La caja que se dejó cargada desde Stock es el valor por defecto de la noche:
+  // aparece escrita en el campo, para verla y poder cambiarla.
   useEffect(() => {
     if (!barId) return
     return onSnapshot(barCol(barId, 'settings'), (snap) => {
       const s = snap.docs.find((d) => d.id === 'caja')
-      setSavedCash(s ? s.data().openingCash || 0 : 0)
+      const guardada = s ? s.data().openingCash || 0 : 0
+      setSavedCash(guardada)
+      setOpeningCash((actual) => (actual === '' && guardada ? String(guardada) : actual))
     })
   }, [barId])
 
   const handleStart = async () => {
-    const name = newName.trim() || `Evento ${new Date().toLocaleDateString('es-AR')}`
+    const name = newName.trim() || nombreSugerido()
     await addDoc(barCol(barId, 'events'), {
       name,
       status: 'live',
@@ -50,7 +63,7 @@ export default function Eventos({ activeEvent }) {
       startedAt: serverTimestamp(),
       endedAt: null,
     })
-    setNewName('')
+    setNewName(nombreSugerido())
     setOpeningCash('')
   }
 
@@ -128,22 +141,30 @@ export default function Eventos({ activeEvent }) {
       ) : (
         <div className="form-card">
           <div className="form-title">Iniciar un evento</div>
+
+          {/* Los dos campos vienen completos: el nombre con el día de hoy y la
+              caja con lo último que se guardó. Así arrancar la noche es tocar
+              un botón, y cambiar algo es opcional. */}
+          <div className="field-label">Nombre</div>
           <div className="form-row">
             <input
-              placeholder="Nombre (ej. Fiesta sábado)"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
+              onFocus={(e) => e.target.select()}
             />
           </div>
+
+          <div className="field-label">Caja inicial</div>
           <div className="form-row">
             <input
               type="number"
               inputMode="numeric"
-              placeholder={savedCash ? `Caja inicial — guardada: ${money(savedCash)}` : 'Caja inicial $ (cambio con el que arrancás)'}
               value={openingCash}
               onChange={(e) => setOpeningCash(e.target.value)}
+              onFocus={(e) => e.target.select()}
             />
           </div>
+
           <button className="btn-start" onClick={handleStart}><PlayIcon /> Iniciar evento</button>
         </div>
       )}
