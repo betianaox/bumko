@@ -117,6 +117,20 @@ export function AuthProvider({ children }) {
         cortar.current?.()
         cortar.current = onSnapshot(barDoc(bar, 'equipo', email), (miembro) => {
           const data = miembro.exists() ? miembro.data() : {}
+
+          /* El nombre lo pone Google, no la app: si el registro se creó a mano
+             o la persona cambió su nombre de cuenta, acá se pone al día. */
+          const suNombre = fbUser.displayName
+          const suFoto = fbUser.photoURL
+          const cambió = (suNombre && data.name !== suNombre) || (suFoto && data.photo !== suFoto)
+
+          if (miembro.exists() && cambió) {
+            setDoc(
+              barDoc(bar, 'equipo', email),
+              { name: suNombre || data.name || email, photo: suFoto || null },
+              { merge: true },
+            ).catch(() => {})
+          }
           setUser({ ...fbUser, teamData: data })
           setBarId(bar)
           setRole(data.role || 'staff')

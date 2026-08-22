@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
-import { onSnapshot, doc, updateDoc, deleteDoc, setDoc, serverTimestamp } from '../data'
+import { onSnapshot, doc, updateDoc, deleteDoc } from '../data'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc, usuarioDoc } from '../bar'
 import Dialog from '../components/Dialog'
 import Switch from '../components/Switch'
 import { TrashIcon } from '../components/icons'
+import Avatar from '../components/Avatar'
 
-/* Quién trabaja en este bar. El admin invita por mail; esa persona entra con
-   su cuenta de Google y ya queda adentro, como staff. Nadie se suma solo:
-   sumarse solo sería meterse en el bar de otro. */
+/* Quién trabaja en este bar. Con la entrada libre prendida, cualquiera que
+   abra el link y entre con Google queda anotado — apagado, hasta que un admin
+   lo habilite desde acá. */
 
 /* dev es un rol de mantenimiento: puede lo mismo que un admin, pero lo que
    registra queda afuera de los reportes y de la caja de la noche. Solo un dev
@@ -20,7 +21,6 @@ const ROLES = [
   { id: 'staff', label: 'Staff' },
 ]
 
-const initial = (u) => (u.name || u.email || '?').trim().charAt(0).toUpperCase()
 
 function fecha(ts) {
   const d = ts?.toDate ? ts.toDate() : null
@@ -32,7 +32,6 @@ export default function Usuarios() {
   const { user, isAdmin, isDev, barId } = useAuth()
   const [users, setUsers] = useState([])
   const [dialog, setDialog] = useState(null)
-  const [nuevo, setNuevo] = useState('')
   const [bar, setBar] = useState(null)
 
   useEffect(() => {
@@ -62,22 +61,6 @@ export default function Usuarios() {
 
   const toggleActive = async (u) => {
     await updateDoc(barDoc(barId, 'equipo', u.id), { active: u.active === false })
-  }
-
-  // Invitar es anotar el mail: cuando esa persona entre con Google, la app
-  // lo encuentra y la deja pasar a este bar. Sin esto no entra a ningún lado.
-  const handleInvite = async () => {
-    const email = nuevo.trim().toLowerCase()
-    if (!email.includes('@')) return
-    await setDoc(barDoc(barId, 'equipo', email), {
-      email,
-      name: email.split('@')[0],
-      role: 'staff',
-      active: true,
-      createdAt: serverTimestamp(),
-    })
-    await setDoc(usuarioDoc(email), { barId })
-    setNuevo('')
   }
 
   const handleRemove = async () => {
@@ -110,7 +93,7 @@ export default function Usuarios() {
 
       {!isAdmin && (
         <div className="notice">
-          Solo un admin puede invitar gente, cambiar roles o dar de baja.
+          Solo un admin puede cambiar roles o dar de baja.
         </div>
       )}
 
@@ -131,24 +114,6 @@ export default function Usuarios() {
               onChange={togglePuerta}
             />
           </div>
-
-          <div className="form-row" style={{ marginBottom: 0, marginTop: 14 }}>
-            <input
-              type="email"
-              inputMode="email"
-              placeholder="O sumar un mail a mano"
-              value={nuevo}
-              onChange={(e) => setNuevo(e.target.value)}
-            />
-            <button
-              className="btn-primary"
-              style={{ width: 'auto', padding: '0 22px', marginTop: 0 }}
-              disabled={!nuevo.includes('@')}
-              onClick={handleInvite}
-            >
-              Sumar
-            </button>
-          </div>
         </div>
       )}
 
@@ -158,7 +123,7 @@ export default function Usuarios() {
           return (
             <div className={'user-card' + (inactivo ? ' off' : '')} key={u.id}>
               <div className="user-head">
-                <span className="avatar">{initial(u)}</span>
+                <Avatar src={u.photo} name={u.name} email={u.email || u.id} size={44} />
                 <div className="user-main">
                   <div className="user-name">
                     {u.name || u.email}
@@ -204,14 +169,14 @@ export default function Usuarios() {
         })}
 
         {users.length === 0 && (
-          <div className="empty-state">Todavía no invitaste a nadie.</div>
+          <div className="empty-state">Todavía no entró nadie con su cuenta de Google.</div>
         )}
       </div>
 
       {dialog && (
         <Dialog
           title={`¿Sacar a ${dialog.user.name || dialog.user.email}?`}
-          sub="Pierde el acceso al bar. Para que vuelva, hay que invitarla de nuevo."
+          sub="Pierde el acceso al bar. Si vuelve a entrar por el link, queda otra vez a la espera de que la habilites."
           confirmLabel="Sacar del equipo"
           danger
           onConfirm={handleRemove}

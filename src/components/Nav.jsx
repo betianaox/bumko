@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { SunIcon, MoonIcon, PowerIcon } from './icons'
+import { SunIcon, MoonIcon } from './icons'
 import Logo from './Logo'
+import Avatar from './Avatar'
 
 /* Iconos de línea, un solo color, heredando el del tab. Los emoji traían su
    propia paleta y cada sistema los dibuja distinto. */
@@ -27,17 +28,17 @@ const TABS = [
     icon: svg(<path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z" />),
   },
   {
-    to: '/eventos', label: 'Eventos', adminOnly: true,
-    icon: svg(<>
-      <rect x="3" y="5" width="18" height="16" rx="3" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
-    </>),
-  },
-  {
     to: '/productos', label: 'Stock', adminOnly: true,
     icon: svg(<>
       <path d="M3 8l9-5 9 5v8l-9 5-9-5V8z" />
       <path d="M3 8l9 5 9-5M12 13v8" />
+    </>),
+  },
+  {
+    to: '/eventos', label: 'Eventos', adminOnly: true,
+    icon: svg(<>
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
     </>),
   },
   {
@@ -54,7 +55,7 @@ const TABS = [
 ]
 
 export default function Nav({ activeEvent }) {
-  const { signOut, demo, isAdmin, pendiente, verComoStaff, setVerComoStaff } = useAuth()
+  const { user, signOut, demo, isAdmin, pendiente, verComoStaff, setVerComoStaff } = useAuth()
   const { theme, toggle } = useTheme()
 
   return (
@@ -84,11 +85,17 @@ export default function Nav({ activeEvent }) {
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
 
-          {/* En demo no hay sesión que cerrar. El reset vive en Stock, abajo de todo:
-              un ↺ acá arriba se lee como "deshacer" y no lo es. */}
-          {!demo && (
-            <button className="icon-btn" onClick={signOut} aria-label="Cerrar sesión">
-              <PowerIcon />
+          {/* La foto hace las dos cosas: decir con qué cuenta estás registrando
+              —en una noche con celulares prestados eso importa— y cerrar la
+              sesión. En demo no hay sesión que cerrar. */}
+          {!demo && user && (
+            <button className="avatar-btn" onClick={signOut} aria-label="Cerrar sesión">
+              <Avatar
+                src={user.photoURL}
+                name={user.displayName}
+                email={user.email}
+                size={26}
+              />
             </button>
           )}
         </div>

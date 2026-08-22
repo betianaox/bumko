@@ -110,7 +110,7 @@ export default function Eventos({ activeEvent }) {
             </div>
             <div className="stat-box">
               <div className="val">{money(esperado)}</div>
-              <div className="lbl">Debe haber</div>
+              <div className="lbl">Total</div>
             </div>
           </div>
 

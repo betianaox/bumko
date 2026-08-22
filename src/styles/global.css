@@ -34,6 +34,7 @@
   --red: #ff4d3d;
   --alarm: #e6001e;      /* stock por agotarse: no es el rojo de "peligro", es más fuerte */
   --green: #1a8f45;      /* va oscuro: encima lleva texto blanco */
+  --green-rgb: 26, 143, 69;
 
   --on-color: #0b0b10;   /* cyan y ámbar son claros: encima siempre texto oscuro */
   --on-strong: #ffffff;  /* verde y rojo son oscuros: encima siempre texto blanco */
@@ -85,6 +86,9 @@
   --invert-bg: #ffffff;
   --invert-ink: #0b0b10;
 
+  /* Verde para escribir sobre fondo translúcido, no para rellenar */
+  --green-ink: #4ade80;
+
   /* El bloque de producto: relleno translúcido del tono y texto blanco */
   --tone-fill: 0.22;
   --punch-ink: var(--text);
@@ -112,6 +116,8 @@
 
   --invert-bg: #14141c;
   --invert-ink: #ffffff;
+
+  --green-ink: #157a3a;
 
   /* Sobre fondo claro el texto blanco no se lee en un relleno translúcido:
      el bloque baja el relleno y escribe con el color del propio tono. */
@@ -226,16 +232,18 @@ input::placeholder { color: var(--text-faint); }
   text-overflow: ellipsis;
 }
 
+/* El evento en curso es un estado, no una alarma: color apenas insinuado y
+   el verde puesto en el texto, como los bloques de producto. */
 .event-chip.live {
-  background: var(--green);
-  color: var(--on-strong);
+  background: rgba(var(--green-rgb), 0.20);
+  color: var(--green-ink);
 }
 
 .event-chip .pulse {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--on-strong);
+  background: var(--green-ink);
   animation: pulse 1.6s ease-in-out infinite;
   flex: none;
 }
@@ -1353,17 +1361,16 @@ input::placeholder { color: var(--text-faint); }
 
 .user-head { display: flex; align-items: center; gap: 12px; }
 
+/* Foto de Google, o la inicial si no hay. El tamaño lo pone quien lo usa. */
 .avatar {
   flex: none;
-  width: 44px;
-  height: 44px;
   border-radius: 50%;
   background: var(--surface-3);
+  object-fit: cover;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 19px;
 }
 
 .user-main { flex: 1; min-width: 0; }
@@ -1529,14 +1536,31 @@ input::placeholder { color: var(--text-faint); }
 
 .switch:disabled { opacity: 0.4; cursor: default; }
 
-/* Botones que son solo un icono: cuadrados */
+/* La foto de quien está logueado, que además cierra sesión. El anillo la
+   despega del fondo: una foto sin borde sobre el header se lee como una
+   mancha, sobre todo si es oscura. */
+.avatar-btn {
+  display: flex;
+  padding: 0;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: 0 0 0 2px var(--surface-3);
+}
+
+/* En el header los controles son redondos y del alto de la foto, pero sin
+   anillo: el de la foto está para despegarla del fondo, un icono de línea
+   no lo necesita. */
 .topbar .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
   color: var(--text-dim);
 }
+
+.topbar .icon-btn svg { width: 18px; height: 18px; }
 
 /* El botón del tacho es solo el icono: cuadrado y del alto del switch */
 .user-actions .icon-btn {
@@ -1556,13 +1580,31 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .event-card.active {
-  background: var(--green);
-  color: var(--on-strong);
+  background: rgba(var(--green-rgb), 0.20);
+  box-shadow: inset 0 0 0 1px rgba(var(--green-rgb), 0.35);
 }
 
-.event-card.active .event-meta { color: rgba(255, 255, 255, 0.78); }
-.event-card.active .stat-box { background: rgba(0, 0, 0, 0.22); }
-.event-card.active .stat-box .lbl { color: rgba(255, 255, 255, 0.7); }
+.event-card.active .event-name { color: var(--green-ink); }
+
+/* Adentro de la tarjeta verde nada vuelve al gris: los recuadros y los
+   botones se tiñen del mismo color, más o menos cargado. */
+.event-card.active .stat-box { background: rgba(var(--green-rgb), 0.15); }
+
+.event-card.active .btn-ghost {
+  background: rgba(var(--green-rgb), 0.15);
+  color: var(--green-ink);
+}
+
+.event-card.active .btn-stop {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 77, 61, 0.45);
+  color: var(--red);
+}
+
+.event-card.active input {
+  background: rgba(var(--green-rgb), 0.15);
+  color: var(--text);
+}
 
 .event-name {
   font-family: var(--font-display);
@@ -1613,7 +1655,7 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .btn-start { background: var(--green); color: var(--on-strong); }
-.btn-stop { background: rgba(0, 0, 0, 0.55); color: var(--on-strong); }
+.btn-stop { background: var(--surface-2); color: var(--red); }
 
 /* Acción secundaria dentro de la tarjeta del evento en curso */
 .btn-ghost {
@@ -1623,8 +1665,8 @@ input::placeholder { color: var(--text-faint); }
   justify-content: center;
   padding: 15px;
   border-radius: var(--r-md);
-  background: rgba(0, 0, 0, 0.22);
-  color: var(--on-strong);
+  background: var(--surface-2);
+  color: var(--text-dim);
   font-weight: 700;
   font-size: 15px;
 }
