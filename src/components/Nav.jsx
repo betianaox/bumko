@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { SunIcon, MoonIcon, PowerIcon, LockIcon } from './icons'
+import { SunIcon, MoonIcon, PowerIcon } from './icons'
 import Logo from './Logo'
 
 /* Iconos de línea, un solo color, heredando el del tab. Los emoji traían su
@@ -110,10 +110,7 @@ export default function Nav({ activeEvent }) {
           if (pendiente || (t.adminOnly && !isAdmin)) {
             return (
               <span key={t.to} className="tab locked" aria-disabled="true" title="Solo para administradores">
-                <span className="tab-lock-wrap">
-                  {t.icon}
-                  <span className="tab-lock"><LockIcon /></span>
-                </span>
+                {t.icon}
                 {t.label}
               </span>
             )

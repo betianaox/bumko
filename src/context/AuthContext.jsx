@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut as fbSignOut } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from '../data'
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from '../data'
 import { auth, googleProvider, db, DEMO, BAR_ID } from '../firebase'
 import { barDoc, usuarioDoc } from '../bar'
 import { DEMO_BAR } from '../demo/mockDb'
@@ -33,6 +33,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(!DEMO)
   const [error, setError] = useState('')
 
+  // Corta la escucha del registro propio al cambiar de sesión
+  const cortar = useRef(null)
+
   // Solo en demo: mirar la app como si fueras staff, para probar los permisos.
   // No se guarda en ningún lado; recargando volvés a admin.
   const [verComoStaff, setVerComoStaff] = useState(false)
@@ -43,11 +46,15 @@ export function AuthProvider({ children }) {
 
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       setError('')
+      cortar.current?.()
+      cortar.current = null
+
       if (!fbUser) {
         setUser(null)
         setAuthorized(false)
         setRole(null)
         setBarId(null)
+        setPendiente(false)
         setLoading(false)
         return
       }
@@ -87,16 +94,22 @@ export function AuthProvider({ children }) {
           return
         }
 
-        const miembro = await getDoc(barDoc(bar, 'equipo', email))
-        const data = miembro.exists() ? miembro.data() : {}
-
-        setUser({ ...fbUser, teamData: data })
-        setBarId(bar)
-        setRole(data.role || 'staff')
-        // Suspendido entra igual: la app se muestra bloqueada por dentro, que
-        // se entiende mucho mejor que un cartel en la puerta.
-        setPendiente(miembro.exists() && data.active === false)
-        setAuthorized(miembro.exists())
+        /* El registro se escucha, no se lee una vez: si un admin suspende a
+           alguien en plena noche, la app se le bloquea en el momento, sin que
+           tenga que cerrar sesión ni recargar. Y si lo vuelve a habilitar,
+           se desbloquea igual de rápido. */
+        cortar.current?.()
+        cortar.current = onSnapshot(barDoc(bar, 'equipo', email), (miembro) => {
+          const data = miembro.exists() ? miembro.data() : {}
+          setUser({ ...fbUser, teamData: data })
+          setBarId(bar)
+          setRole(data.role || 'staff')
+          // Suspendido entra igual: la app se muestra bloqueada por dentro,
+          // que se entiende mucho mejor que un cartel en la puerta.
+          setPendiente(miembro.exists() && data.active === false)
+          setAuthorized(miembro.exists())
+          setLoading(false)
+        })
       } catch (e) {
         console.error(e)
         setUser(fbUser)
@@ -106,7 +119,10 @@ export function AuthProvider({ children }) {
       }
       setLoading(false)
     })
-    return unsub
+    return () => {
+      cortar.current?.()
+      unsub()
+    }
   }, [])
 
   const signIn = async () => {
