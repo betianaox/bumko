@@ -20,7 +20,7 @@ export default function Login() {
         </>
       ) : (
         <>
-          <p className="login-sub">Control de stock para la noche. Entrá con tu cuenta de Google del equipo.</p>
+          <p className="login-sub">Control de stock. Entrá con tu cuenta de Google del equipo.</p>
           <button className="google-btn" onClick={signIn}>
             <GoogleIcon />
             Iniciar sesión con Google
