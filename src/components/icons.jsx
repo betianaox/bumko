@@ -128,3 +128,18 @@ export const LockIcon = () => (
     <path d="M8 10V7a4 4 0 018 0v3" />
   </svg>
 )
+
+export const EyeIcon = () => (
+  <svg {...base}>
+    <path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+export const EyeOffIcon = () => (
+  <svg {...base}>
+    <path d="M10.6 6.1A9.9 9.9 0 0112 6c6.2 0 10 6 10 6a17 17 0 01-3.2 3.7M6.3 7.8A17 17 0 002 12s3.8 6 10 6a9.7 9.7 0 004-.8" />
+    <path d="M9.9 9.9a3 3 0 004.2 4.2" />
+    <path d="M3 3l18 18" />
+  </svg>
+)

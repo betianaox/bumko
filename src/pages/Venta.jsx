@@ -33,7 +33,9 @@ export default function Venta({ activeEvent }) {
     if (!barId) return
     const q = query(barCol(barId, 'products'), orderBy('name'))
     return onSnapshot(q, (snap) => {
-      setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      // Los ocultos no se muestran acá: siguen existiendo, con su stock y su
+      // historia, pero esta noche no se venden.
+      setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => p.visible !== false))
     })
   }, [barId])
 

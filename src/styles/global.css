@@ -1291,7 +1291,21 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .product-row .row-main { flex: 1; min-width: 0; }
-.product-row .name { font-weight: 700; font-size: 17px; }
+/* Oculto: se ve que está, y se ve que no está a la venta */
+.product-row.oculto { opacity: 0.5; }
+
+.product-row .name { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+
+/* El ojo dice si el producto se ve en la pantalla de venta, y lo cambia */
+.eye {
+  display: flex;
+  padding: 2px;
+  color: var(--text-faint);
+  flex: none;
+}
+
+.eye svg { width: 17px; height: 17px; }
+.eye.off { color: var(--amber); }
 .product-row .meta { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); margin-top: 2px; }
 
 .row-actions { display: flex; gap: 6px; flex: none; }

@@ -7,7 +7,7 @@ import { barCol, barDoc } from '../bar'
 import { toneOf } from '../productTone'
 import TonePicker from '../components/TonePicker'
 import Dialog from '../components/Dialog'
-import { TrashIcon, PlusIcon, BoxIcon } from '../components/icons'
+import { TrashIcon, PlusIcon, BoxIcon, EyeIcon, EyeOffIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resetDemoData } from '../demo/mockDb'
 
@@ -40,6 +40,7 @@ export default function CargaInicial() {
       stock: Number(stock),
       lowStockThreshold: threshold === '' ? 5 : Number(threshold),
       tone,
+      visible: true,
     })
     setName(''); setCost(''); setPrice(''); setStock(''); setThreshold(''); setTone(null)
   }
@@ -58,6 +59,10 @@ export default function CargaInicial() {
     const p = dialog.product
     setDialog(null)
     await deleteDoc(barDoc(barId, 'products', p.id))
+  }
+
+  const toggleVisible = async (p) => {
+    await updateDoc(barDoc(barId, 'products', p.id), { visible: p.visible === false })
   }
 
   const handleTone = async (p, t) => {
@@ -91,16 +96,32 @@ export default function CargaInicial() {
       <div className="product-list">
         {products.map((p) => (
           <div key={p.id}>
-            <div className="product-row">
+            <div className={'product-row' + (p.visible === false ? ' oculto' : '')}>
               <button
                 className={'row-sw ' + toneOf(p)}
                 onClick={() => setEditingTone(editingTone === p.id ? null : p.id)}
                 title="Cambiar color"
               />
               <div className="row-main">
-                <div className="name">{p.name}</div>
+                <div className="name">
+                  {p.name}
+                  {/* El ojo saca el producto de la pantalla de venta sin borrarlo:
+                      lo que no hay esta noche, o lo que todavía no salió a la venta.
+                      El stock y las ventas viejas quedan intactos. */}
+                  <button
+                    className={'eye' + (p.visible === false ? ' off' : '')}
+                    onClick={() => toggleVisible(p)}
+                    aria-pressed={p.visible !== false}
+                    title={p.visible === false ? 'Oculto en la pantalla de venta' : 'A la venta'}
+                    aria-label={p.visible === false ? `Mostrar ${p.name} en la pantalla de venta` : `Ocultar ${p.name} de la pantalla de venta`}
+                  >
+                    {p.visible === false ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
                 <div className="meta">
-                  {p.stock} en stock · ${p.salePrice.toLocaleString('es-AR')} · costo ${p.costPrice.toLocaleString('es-AR')}
+                  {p.visible === false
+                    ? 'Oculto en la pantalla de venta'
+                    : `${p.stock} en stock · $${p.salePrice.toLocaleString('es-AR')} · costo $${p.costPrice.toLocaleString('es-AR')}`}
                 </div>
               </div>
               <div className="row-actions">
