@@ -121,8 +121,12 @@ export function AuthProvider({ children }) {
         setAuthorized(false)
         setBarId(null)
         setRole(null)
+        setLoading(false)
       }
-      setLoading(false)
+      /* Nada de apagar el "cargando" acá: onSnapshot devuelve enseguida pero
+         el primer dato llega después, y en ese intervalo la app se creía sin
+         sesión y mostraba el botón de Google. Cada rama lo apaga cuando de
+         verdad terminó. */
     })
     return () => {
       cortar.current?.()
