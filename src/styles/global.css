@@ -1297,10 +1297,12 @@ input::placeholder { color: var(--text-faint); }
 .product-row .name { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
 
 /* El ojo dice si el producto se ve en la pantalla de venta, y lo cambia */
+/* Verde a la venta, ámbar oculto: los dos son estados normales del producto,
+   no un aviso de que algo anda mal. */
 .eye {
   display: flex;
   padding: 2px;
-  color: var(--text-faint);
+  color: var(--green);
   flex: none;
 }
 
