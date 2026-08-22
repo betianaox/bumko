@@ -59,8 +59,39 @@ export default function Nav({ activeEvent }) {
 
   return (
     <>
-      <div className="topbar">
-        <Logo className="brand-logo" />
+      {/* Dos renglones: arriba la marca y los controles, abajo el evento.
+          En una sola línea, un nombre de evento largo empujaba los botones
+          fuera de la pantalla en el celular. */}
+      <header className="topbar">
+        <div className="topbar-row">
+          <Logo className="brand-logo" />
+
+          {/* Solo en demo: para poder ver la app con los permisos del staff */}
+          {demo && (
+            <button
+              className={'role-peek' + (verComoStaff ? ' staff' : '')}
+              onClick={() => setVerComoStaff(!verComoStaff)}
+            >
+              {verComoStaff ? 'staff' : 'admin'}
+            </button>
+          )}
+
+          <button
+            className="icon-btn"
+            onClick={toggle}
+            aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+
+          {/* En demo no hay sesión que cerrar. El reset vive en Stock, abajo de todo:
+              un ↺ acá arriba se lee como "deshacer" y no lo es. */}
+          {!demo && (
+            <button className="icon-btn" onClick={signOut} aria-label="Cerrar sesión">
+              <PowerIcon />
+            </button>
+          )}
+        </div>
 
         {activeEvent ? (
           <div className="event-chip live">
@@ -70,33 +101,7 @@ export default function Nav({ activeEvent }) {
         ) : (
           <div className="event-chip">Sin evento</div>
         )}
-
-        {/* Solo en demo: para poder ver la app con los permisos del staff */}
-        {demo && (
-          <button
-            className={'role-peek' + (verComoStaff ? ' staff' : '')}
-            onClick={() => setVerComoStaff(!verComoStaff)}
-          >
-            {verComoStaff ? 'staff' : 'admin'}
-          </button>
-        )}
-
-        <button
-          className="icon-btn"
-          onClick={toggle}
-          aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
-        >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </button>
-
-        {/* En demo no hay sesión que cerrar. El reset vive en Stock, abajo de todo:
-            un ↺ acá arriba se lee como "deshacer" y no lo es. */}
-        {!demo && (
-          <button className="icon-btn" onClick={signOut} aria-label="Cerrar sesión">
-            <PowerIcon />
-          </button>
-        )}
-      </div>
+      </header>
 
       {/* La navegación va abajo: es donde llega el pulgar con el celular en una mano */}
       <nav className="tabbar">
