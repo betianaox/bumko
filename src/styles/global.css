@@ -1394,6 +1394,18 @@ input::placeholder { color: var(--text-faint); }
   color: var(--text-dim);
 }
 
+/* Las dos fechas en una línea: cuándo entró por primera vez y cuándo fue la
+   última. La segunda va más tenue porque es la que se mira de reojo. */
+.user-fechas {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+.user-fechas .tenue { opacity: 0.65; }
+
 .user-mail {
   font-size: 13px;
   color: var(--text-faint);

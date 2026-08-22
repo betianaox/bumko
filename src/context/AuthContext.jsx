@@ -35,6 +35,8 @@ export function AuthProvider({ children }) {
 
   // Corta la escucha del registro propio al cambiar de sesión
   const cortar = useRef(null)
+  // Marca que esta sesión ya dejó registrada su visita
+  const fichado = useRef(false)
 
   // Solo en demo: mirar la app como si fueras staff, para probar los permisos.
   // No se guarda en ningún lado; recargando volvés a admin.
@@ -48,6 +50,7 @@ export function AuthProvider({ children }) {
       setError('')
       cortar.current?.()
       cortar.current = null
+      fichado.current = false
 
       if (!fbUser) {
         setUser(null)
@@ -118,16 +121,22 @@ export function AuthProvider({ children }) {
         cortar.current = onSnapshot(barDoc(bar, 'equipo', email), (miembro) => {
           const data = miembro.exists() ? miembro.data() : {}
 
-          /* El nombre lo pone Google, no la app: si el registro se creó a mano
-             o la persona cambió su nombre de cuenta, acá se pone al día. */
-          const suNombre = fbUser.displayName
-          const suFoto = fbUser.photoURL
-          const cambió = (suNombre && data.name !== suNombre) || (suFoto && data.photo !== suFoto)
+          /* El nombre y la foto los pone Google, no la app: si el registro se
+             creó a mano o la persona cambió su cuenta, acá se ponen al día.
+             De paso queda registrada esta visita.
 
-          if (miembro.exists() && cambió) {
+             Una sola vez por sesión: esto corre dentro del onSnapshot, así que
+             escribir vuelve a disparar el callback y sin el freno serían dos
+             escrituras por cada entrada. */
+          if (miembro.exists() && !fichado.current) {
+            fichado.current = true
             setDoc(
               barDoc(bar, 'equipo', email),
-              { name: suNombre || data.name || email, photo: suFoto || null },
+              {
+                name: fbUser.displayName || data.name || email,
+                photo: fbUser.photoURL || null,
+                lastSeen: serverTimestamp(),
+              },
               { merge: true },
             ).catch(() => {})
           }
