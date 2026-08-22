@@ -2,8 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "//": "Las rutas (/reportes, /usuarios...) existen dentro de la app, no en el servidor. Sin esto, recargar en cualquiera que no sea la raíz da 404.",
-      "source": "/((?!assets/|.*\.[a-zA-Z0-9]+$).*)",
+      "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
   ]
