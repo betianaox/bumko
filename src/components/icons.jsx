@@ -108,3 +108,16 @@ export const ArrowRightIcon = () => (
     <path d="M4 12h15M13 6l6 6-6 6" />
   </svg>
 )
+
+export const ListIcon = () => (
+  <svg {...base}>
+    <path d="M9 6h11M9 12h11M9 18h11" />
+    <path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
+  </svg>
+)
+
+export const ChartIcon = () => (
+  <svg {...base}>
+    <path d="M5 20V10M12 20V4M19 20v-7" />
+  </svg>
+)

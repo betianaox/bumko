@@ -3,10 +3,16 @@ import { onSnapshot, query, orderBy } from '../data'
 import { useAuth } from '../context/AuthContext'
 import { barCol } from '../bar'
 import Picker from '../components/Picker'
-import { ArrowRightIcon, CloseIcon } from '../components/icons'
+import { ArrowRightIcon, CloseIcon, ListIcon, ChartIcon } from '../components/icons'
+import { Columnas, Barras, Composicion } from '../components/Charts'
 
 // "Por evento" dejó de ser una agrupación: ahora el evento es un filtro más,
 // y elegido uno podés seguir mirándolo por día o por mes.
+const VISTAS = [
+  { id: 'lista', label: 'Listado', icon: <ListIcon /> },
+  { id: 'graficos', label: 'Gráficos', icon: <ChartIcon /> },
+]
+
 const MODES = [
   { id: 'dia', label: 'Por día' },
   { id: 'mes', label: 'Por mes' },
@@ -73,6 +79,7 @@ export default function Reportes() {
   const [from, setFrom] = useState(() => mesActual()[0])
   const [to, setTo] = useState(() => mesActual()[1])
   const [eventId, setEventId] = useState('')   // '' = no filtra por evento
+  const [vista, setVista] = useState('lista')
 
   useEffect(() => {
     if (!barId) return
@@ -135,6 +142,42 @@ export default function Reportes() {
     // Más reciente arriba; los grupos sin fecha/evento (sort vacío) van al fondo.
     return Object.values(map).sort((a, b) => b.sort.localeCompare(a.sort))
   }, [filtered, events, mode])
+
+  /* Los gráficos miran todo el período filtrado junto, no grupo por grupo:
+     la pregunta ahí es "cómo viene el mes", no "qué pasó el martes". */
+  const resumen = useMemo(() => {
+    const total = { plata: 0, unidades: 0, regalos: 0, especiales: 0, productos: {}, gente: {} }
+
+    for (const s of filtered) {
+      total.plata += s.amount || 0
+      total.unidades += 1
+      if (s.mode === 'gift') total.regalos += 1
+      if (s.mode === 'custom') total.especiales += 1
+      total.productos[s.productName] = (total.productos[s.productName] || 0) + 1
+      const quien = s.userName || s.userEmail || 'Sin identificar'
+      total.gente[quien] = (total.gente[quien] || 0) + 1
+    }
+
+    // La serie va al revés que el listado: en el tiempo se lee de izquierda a derecha
+    const serie = [...groups].reverse().map((g) => ({
+      label: g.label,
+      short: mode === 'mes' ? g.label.split(' ')[0].slice(0, 3) : g.label.slice(0, 5),
+      value: g.total,
+    }))
+
+    const ranking = (obj, n) => Object.entries(obj)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n)
+      .map(([label, value]) => ({ label, value }))
+
+    return {
+      ...total,
+      serie,
+      topProductos: ranking(total.productos, 8),
+      topGente: ranking(total.gente, 8),
+      regulares: total.unidades - total.regalos - total.especiales,
+    }
+  }, [filtered, groups, mode])
 
   return (
     <div>
@@ -200,6 +243,23 @@ export default function Reportes() {
             <CloseIcon />
           </button>
         )}
+
+        {/* Los mismos datos, dos lecturas: el listado para buscar un número
+            concreto, los gráficos para ver la forma del período. */}
+        <div className="view-toggle">
+          {VISTAS.map((v) => (
+            <button
+              key={v.id}
+              className={'view-ico' + (vista === v.id ? ' selected' : '')}
+              onClick={() => setVista(v.id)}
+              title={v.label}
+              aria-label={v.label}
+              aria-pressed={vista === v.id}
+            >
+              {v.icon}
+            </button>
+          ))}
+        </div>
       </div>
 
       {groups.length === 0 && (
@@ -210,7 +270,48 @@ export default function Reportes() {
         </div>
       )}
 
-      {groups.map((g) => {
+      {vista === 'graficos' && groups.length > 0 && (
+        <>
+          <div className="event-stats" style={{ marginTop: 0, marginBottom: 14 }}>
+            <div className="stat-box">
+              <div className="val">${resumen.plata.toLocaleString('es-AR')}</div>
+              <div className="lbl">Recaudado</div>
+            </div>
+            <div className="stat-box">
+              <div className="val">{resumen.unidades}</div>
+              <div className="lbl">Entregados</div>
+            </div>
+            <div className="stat-box">
+              <div className="val">{resumen.regalos}</div>
+              <div className="lbl">Regalos</div>
+            </div>
+          </div>
+
+          <Columnas
+            title={mode === 'mes' ? 'Recaudado por mes' : 'Recaudado por día'}
+            data={resumen.serie}
+          />
+
+          <Composicion
+            title="Cómo salió cada unidad"
+            parts={[
+              { label: 'Precio regular', value: resumen.regulares, tone: 'c1' },
+              { label: 'Precio especial', value: resumen.especiales, tone: 'c2' },
+              { label: 'Regalados', value: resumen.regalos, tone: 'c3' },
+            ]}
+          />
+
+          <Barras title="Más vendidos" data={resumen.topProductos} empty="Sin ventas" />
+
+          <Barras
+            title="Quién registró"
+            data={resumen.topGente}
+            empty="Sin registros"
+          />
+        </>
+      )}
+
+      {vista === 'lista' && groups.map((g) => {
         const topProducts = Object.entries(g.products).sort((a, b) => b[1] - a[1]).slice(0, 5)
         const topUsers = Object.entries(g.users).sort((a, b) => b[1] - a[1])
         return (

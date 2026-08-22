@@ -903,6 +903,173 @@ input::placeholder { color: var(--text-faint); }
   font-weight: 600;
 }
 
+/* ---------- Gráficos ----------
+   Tres colores para "cómo salió cada unidad" y uno solo para las magnitudes.
+   Los tres están verificados para daltonismo y contra los dos fondos, y
+   además cada uno lleva su número escrito: nada se lee solo por el color. */
+
+:root {
+  --c1: #37a862;   /* precio regular */
+  --c2: #6f74ee;   /* precio especial */
+  --c3: #c98400;   /* regalado */
+}
+
+/* Listado o gráficos: dos iconos chicos al final de la fila de fechas.
+   Es un cambio de lente sobre lo mismo, no un filtro, así que no compite
+   en tamaño con los controles que sí cambian los datos. */
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  flex: none;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.view-ico {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: var(--text-faint);
+}
+
+.view-ico svg { width: 18px; height: 18px; }
+
+.view-ico.selected { background: var(--invert-bg); color: var(--invert-ink); }
+
+.chart-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 18px 16px 14px;
+  margin-bottom: 12px;
+}
+
+.chart-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.chart-empty { color: var(--text-faint); font-size: 14px; }
+
+/* Serie en el tiempo */
+
+.cols {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 150px;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.col-track {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+}
+
+.col-bar {
+  width: 100%;
+  background: var(--accent);
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+}
+
+.col-lbl {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-align: center;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.chart-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+/* Ranking */
+
+.hbars { display: flex; flex-direction: column; gap: 10px; }
+
+.hbar {
+  display: grid;
+  grid-template-columns: minmax(70px, 30%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.hbar-lbl {
+  font-size: 14px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hbar-track { background: var(--surface-2); border-radius: 4px; height: 14px; }
+
+.hbar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  min-width: 3px;
+}
+
+.hbar-val { font-weight: 700; font-size: 14px; min-width: 28px; text-align: right; }
+
+/* Parte del todo */
+
+.stack {
+  display: flex;
+  gap: 2px;          /* la separación evita que dos colores se lean como uno */
+  height: 22px;
+  margin-bottom: 14px;
+}
+
+.stack-seg { border-radius: 4px; min-width: 4px; }
+
+.stack-seg.c1, .dot.c1 { background: var(--c1); }
+.stack-seg.c2, .dot.c2 { background: var(--c2); }
+.stack-seg.c3, .dot.c3 { background: var(--c3); }
+
+.legend { display: flex; flex-direction: column; gap: 8px; }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.legend-item .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.legend-item strong { margin-left: auto; color: var(--text); }
+.legend-item .pct { color: var(--text-faint); min-width: 38px; text-align: right; }
+
 /* ---------- Diálogo ----------
    Tarjeta centrada, no pantalla completa: seguís viendo el contexto
    de atrás y no se siente como que cambiaste de pantalla. */
