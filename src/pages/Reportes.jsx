@@ -89,6 +89,8 @@ export default function Reportes() {
   // mirando por evento: "el finde pasado, evento por evento" es una pregunta válida.
   const filtered = useMemo(() => {
     return sales.filter((s) => {
+      // Lo registrado por un dev es prueba: nunca entra en los números
+      if (s.dev) return false
       // El evento se cruza con las fechas: podés pedir "la fiesta del sábado"
       // y además acotarla, o mirar por día quedándote solo con ese evento.
       if (eventId && s.eventId !== eventId) return false

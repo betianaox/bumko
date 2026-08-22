@@ -123,7 +123,9 @@ export function AuthProvider({ children }) {
         barId,
         authorized,
         role: verComoStaff ? 'staff' : role,
-        isAdmin: role === 'admin' && !verComoStaff,
+        // dev puede lo mismo que admin: es un rol de mantenimiento, no de negocio
+        isAdmin: (role === 'admin' || role === 'dev') && !verComoStaff,
+        isDev: role === 'dev' && !verComoStaff,
         loading,
         error,
         signIn,

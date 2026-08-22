@@ -18,7 +18,7 @@ function buzz(pattern) {
 }
 
 export default function Venta({ activeEvent }) {
-  const { user, barId } = useAuth()
+  const { user, barId, isDev } = useAuth()
   const [products, setProducts] = useState([])
   const [selected, setSelected] = useState(null)
   const [recent, setRecent] = useState([])
@@ -74,6 +74,9 @@ export default function Venta({ activeEvent }) {
       reason: saleData.reason || null,
       who: saleData.who || null,
       eventId: activeEvent ? activeEvent.id : null,
+      // Lo que registra un dev es prueba, no venta: queda marcado para que
+      // los reportes y los totales del evento no lo cuenten.
+      dev: isDev ? true : null,
       userEmail: user?.email || null,
       userName: user?.displayName || null,
       createdAt: serverTimestamp(),

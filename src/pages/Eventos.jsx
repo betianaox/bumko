@@ -25,7 +25,8 @@ export default function Eventos({ activeEvent }) {
   useEffect(() => {
     if (!activeEvent || !barId) { setLiveSales([]); return }
     const q = query(barCol(barId, 'sales'), where('eventId', '==', activeEvent.id))
-    return onSnapshot(q, (snap) => setLiveSales(snap.docs.map((d) => d.data())))
+    // Las pruebas de un dev no cuentan para la caja de la noche
+    return onSnapshot(q, (snap) => setLiveSales(snap.docs.map((d) => d.data()).filter((s) => !s.dev)))
   }, [activeEvent, barId])
 
   // La caja que se dejó cargada desde Stock es el valor por defecto de la noche.

@@ -1,102 +1,54 @@
 rules_version = '2';
 
-/* Cada bar es una cuenta cerrada: sus productos, ventas, eventos y equipo
-   cuelgan de bares/{barId} y nadie de otro bar puede leerlos ni tocarlos.
-   usuarios/{email} es el índice que dice a qué bar entra cada persona.
-
-   Cuando exista la app nativa, comparte esta misma base: lo único que cambia
-   es que cada quien que la instale crea su propio bar. */
-
+// Cada bar es una cuenta cerrada: nadie de otro bar ve ni toca sus datos.
+// usuarios/{email} dice a qué bar entra cada persona.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function yo() { return request.auth.token.email; }
+    function miembro(b) { return get(/databases/$(database)/documents/bares/$(b)/equipo/$(yo())).data; }
+    function delBar(b) { return request.auth != null && exists(/databases/$(database)/documents/bares/$(b)/equipo/$(yo())) && miembro(b).active != false; }
+    function esDev(b) { return delBar(b) && miembro(b).role == 'dev'; }
+    // dev puede lo mismo que admin: es mantenimiento, no negocio
+    function esAdmin(b) { return delBar(b) && (miembro(b).role == 'admin' || miembro(b).role == 'dev'); }
+    // Puerta abierta: se anota solo el que llega por el link, siempre como staff.
+    function abierta(b) { return get(/databases/$(database)/documents/bares/$(b)).data.autoJoin == true; }
 
-    function yo() {
-      return request.auth.token.email;
-    }
-
-    function miembroDe(barId) {
-      return get(/databases/$(database)/documents/bares/$(barId)/equipo/$(yo())).data;
-    }
-
-    function esDelBar(barId) {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/bares/$(barId)/equipo/$(yo()))
-        && miembroDe(barId).active != false;
-    }
-
-    function esAdminDe(barId) {
-      return esDelBar(barId) && miembroDe(barId).role == 'admin';
-    }
-
-    /* Un bar con la puerta abierta deja entrar a cualquiera que llegue por el
-       link, sin invitación: se anota solo y siempre como staff. Es lo que hace
-       que el equipo pueda arrancar una noche sin cargar a nadie de a uno.
-       El admin la apaga desde la pestaña Equipo cuando ya entraron todos. */
-    function puertaAbierta(barId) {
-      return get(/databases/$(database)/documents/bares/$(barId)).data.autoJoin == true;
-    }
-
-    // Índice de personas. Cada uno lee el suyo para saber a qué bar entrar.
     match /usuarios/{email} {
       allow read: if request.auth != null && yo() == email;
-
-      allow create: if request.auth != null
-        && yo() == email
-        && puertaAbierta(request.resource.data.barId);
-
-      allow write: if request.auth != null
-        && esAdminDe(request.resource.data.get('barId', resource.data.barId));
+      allow create: if request.auth != null && yo() == email && abierta(request.resource.data.barId);
+      allow write: if request.auth != null && esAdmin(request.resource.data.get('barId', resource.data.barId));
     }
 
-    match /bares/{barId} {
-      allow read: if esDelBar(barId);
-      allow update, delete: if esAdminDe(barId);
-      // Crear un bar es hacerse dueño: solo para uno mismo.
+    match /bares/{b} {
+      allow read: if delBar(b);
       allow create: if request.auth != null && request.resource.data.ownerEmail == yo();
+      allow update, delete: if esAdmin(b);
 
       match /equipo/{email} {
-        allow read: if esDelBar(barId);
-
-        // Anotarse uno mismo, solo con la puerta abierta y siempre como staff:
-        // nadie puede entrar dándose permisos de admin.
-        allow create: if request.auth != null
-          && yo() == email
-          && puertaAbierta(barId)
-          && request.resource.data.role == 'staff'
-          && request.resource.data.email == email;
-
-        allow update, delete: if esAdminDe(barId);
+        allow read: if delBar(b);
+        allow create: if request.auth != null && yo() == email && abierta(b) && request.resource.data.role == 'staff';
+        // Nombrar o destituir devs es cosa de devs
+        allow update: if esAdmin(b) && (request.resource.data.role != 'dev' || esDev(b)) && (resource.data.role != 'dev' || esDev(b));
+        allow delete: if esAdmin(b) && (resource.data.role != 'dev' || esDev(b));
       }
 
-      // Cargar, editar y borrar productos es del admin. El staff solo puede
-      // mover el stock, que es lo que pasa con cada venta y cada deshacer:
-      // si toca cualquier otro campo (el precio, por ejemplo), se rechaza.
+      // El staff solo puede mover el stock; los demás campos son del admin.
       match /products/{id} {
-        allow read: if esDelBar(barId);
-        allow create, delete: if esAdminDe(barId);
-        allow update: if esAdminDe(barId)
-          || (esDelBar(barId)
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']));
+        allow read: if delBar(b);
+        allow create, delete: if esAdmin(b);
+        allow update: if esAdmin(b) || (delBar(b) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']));
       }
 
-      // Vender es lo único que el staff puede escribir. Puede borrar una
-      // venta propia — es el "deshacer" — pero no las del resto.
+      // Vender es lo único que escribe el staff, y solo puede borrar lo suyo.
       match /sales/{id} {
-        allow read: if esDelBar(barId);
-        allow create: if esDelBar(barId) && request.resource.data.userEmail == yo();
-        allow delete: if esAdminDe(barId) || (esDelBar(barId) && resource.data.userEmail == yo());
-        allow update: if esAdminDe(barId);
+        allow read: if delBar(b);
+        allow create: if delBar(b) && request.resource.data.userEmail == yo();
+        allow delete: if esAdmin(b) || (delBar(b) && resource.data.userEmail == yo());
+        allow update: if esAdmin(b);
       }
 
-      match /events/{id} {
-        allow read: if esDelBar(barId);
-        allow write: if esAdminDe(barId);
-      }
-
-      match /settings/{id} {
-        allow read: if esDelBar(barId);
-        allow write: if esAdminDe(barId);
-      }
+      match /events/{id} { allow read: if delBar(b); allow write: if esAdmin(b); }
+      match /settings/{id} { allow read: if delBar(b); allow write: if esAdmin(b); }
     }
   }
 }

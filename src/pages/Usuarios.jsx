@@ -11,7 +11,11 @@ import { TrashIcon } from '../components/icons'
    su cuenta de Google y ya queda adentro, como staff. Nadie se suma solo:
    sumarse solo sería meterse en el bar de otro. */
 
+/* dev es un rol de mantenimiento: puede lo mismo que un admin, pero lo que
+   registra queda afuera de los reportes y de la caja de la noche. Solo un dev
+   puede nombrar a otro dev, así un admin no puede ascenderse a sí mismo. */
 const ROLES = [
+  { id: 'dev', label: 'Dev' },
   { id: 'admin', label: 'Admin' },
   { id: 'staff', label: 'Staff' },
 ]
@@ -25,7 +29,7 @@ function fecha(ts) {
 }
 
 export default function Usuarios() {
-  const { user, isAdmin, barId } = useAuth()
+  const { user, isAdmin, isDev, barId } = useAuth()
   const [users, setUsers] = useState([])
   const [dialog, setDialog] = useState(null)
   const [nuevo, setNuevo] = useState('')
@@ -84,12 +88,21 @@ export default function Usuarios() {
     await deleteDoc(usuarioDoc(u.id))
   }
 
-  const admins = users.filter((u) => u.role === 'admin').length
   const soyYo = (u) => u.id === (user?.email || '').toLowerCase()
+  const manda = (u) => u.role === 'admin' || u.role === 'dev'
 
-  // No dejamos que el último admin se degrade o se borre: quedaría un equipo
-  // sin nadie que pueda administrar, y solo se arregla desde la consola de Firebase.
-  const ultimoAdmin = (u) => u.role === 'admin' && admins <= 1
+  // No dejamos que el último que puede administrar se degrade o se borre:
+  // quedaría un equipo sin nadie a cargo, y eso solo se arregla desde la
+  // consola de Firebase.
+  const conMando = users.filter(manda).length
+  const ultimoAdmin = (u) => manda(u) && conMando <= 1
+
+  // Nombrar o destituir devs es cosa de devs.
+  const puedeTocarRol = (u, rol) => {
+    if (!isAdmin) return false
+    if (rol === 'dev' || u.role === 'dev') return isDev
+    return !ultimoAdmin(u) || manda({ role: rol })
+  }
 
   return (
     <div>
@@ -162,7 +175,7 @@ export default function Usuarios() {
                     <button
                       key={r.id}
                       className={'role-btn' + ((u.role || 'staff') === r.id ? ' selected' : '')}
-                      disabled={!isAdmin || (r.id === 'staff' && ultimoAdmin(u))}
+                      disabled={!puedeTocarRol(u, r.id)}
                       onClick={() => setRole(u, r.id)}
                     >
                       {r.label}
@@ -172,14 +185,14 @@ export default function Usuarios() {
 
                 <Switch
                   checked={!inactivo}
-                  disabled={!isAdmin || ultimoAdmin(u)}
+                  disabled={!isAdmin || ultimoAdmin(u) || (u.role === 'dev' && !isDev)}
                   label={inactivo ? 'Suspendido' : 'Activo'}
                   onChange={() => toggleActive(u)}
                 />
 
                 <button
                   className="icon-btn danger"
-                  disabled={!isAdmin || ultimoAdmin(u)}
+                  disabled={!isAdmin || ultimoAdmin(u) || (u.role === 'dev' && !isDev)}
                   onClick={() => setDialog({ user: u })}
                   aria-label="Sacar del equipo"
                 >
