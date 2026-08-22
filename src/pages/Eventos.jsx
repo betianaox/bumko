@@ -7,7 +7,7 @@ import { PlayIcon, StopIcon } from '../components/icons'
 
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
 
-const CAJA_SUGERIDA = 10000   // arranque razonable cuando todavía no se guardó ninguna
+const CAJA_SUGERIDA = 0   // arranca en cero: el número lo pone quien cuenta la caja
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
