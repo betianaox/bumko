@@ -8,6 +8,6 @@ const api = DEMO ? mock : firestore
 
 export const {
   collection, doc, query, orderBy, where, limit,
-  onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
+  onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs,
   increment, serverTimestamp,
 } = api

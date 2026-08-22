@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut as fbSignOut } from 'firebase/auth'
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from '../data'
+import { collection, doc, getDoc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc } from '../data'
 import { auth, googleProvider, db, DEMO, BAR_ID } from '../firebase'
 import { barDoc, usuarioDoc } from '../bar'
 import { DEMO_BAR } from '../demo/mockDb'
@@ -70,13 +70,24 @@ export function AuthProvider({ children }) {
 
         let bar = indice.exists() ? indice.data().barId : null
 
-        // No pertenece a ningún bar todavía. Si esta instalación de la web
-        // apunta a un bar con la puerta abierta, se suma solo como staff:
-        // el equipo entra escaneando el link, sin que nadie los cargue de a uno.
-        if (!bar && BAR_ID) {
-          const puerta = await getDoc(doc(db, 'bares', BAR_ID))
+        /* No pertenece a ningún bar todavía. Si el bar tiene la puerta abierta
+           se suma solo como staff: el equipo entra por el link, sin que nadie
+           los cargue de a uno.
+
+           A qué bar entra sale de VITE_BAR_ID; si esa variable falta —pasó una
+           vez y dejó gente afuera en la puerta— y hay un único bar en la base,
+           se usa ese. Con más de uno no se adivina: ahí la variable es la que
+           decide, y sin ella la persona no entra a ninguno. */
+        let destino = BAR_ID
+        if (!bar && !destino) {
+          const bares = await getDocs(query(collection(db, 'bares'), limit(2)))
+          if (bares.docs.length === 1) destino = bares.docs[0].id
+        }
+
+        if (!bar && destino) {
+          const puerta = await getDoc(doc(db, 'bares', destino))
           if (puerta.exists() && puerta.data().autoJoin) {
-            await setDoc(barDoc(BAR_ID, 'equipo', email), {
+            await setDoc(barDoc(destino, 'equipo', email), {
               email,
               name: fbUser.displayName || email,
               role: 'staff',
@@ -85,8 +96,8 @@ export function AuthProvider({ children }) {
               active: false,
               createdAt: serverTimestamp(),
             })
-            await setDoc(usuarioDoc(email), { barId: BAR_ID })
-            bar = BAR_ID
+            await setDoc(usuarioDoc(email), { barId: destino })
+            bar = destino
           }
         }
 

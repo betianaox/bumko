@@ -208,6 +208,10 @@ export function onSnapshot(refOrQuery, cb) {
   }
 }
 
+export async function getDocs(q) {
+  return runQuery(q.constraints ? q : { __col: q.__col, constraints: [] })
+}
+
 export async function getDoc(ref) {
   const data = store[ref.__col]?.[ref.__id]
   return { exists: () => !!data, data: () => ({ ...data }), id: ref.__id }
