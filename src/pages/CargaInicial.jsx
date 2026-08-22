@@ -78,7 +78,7 @@ export default function CargaInicial() {
         </div>
         <div className="form-row">
           <input className="small" placeholder="Stock inicial" type="number" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} />
-          <input className="small" placeholder="Alerta stock bajo (ej. 5)" type="number" inputMode="numeric" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
+          <input className="small" placeholder="Alerta stock" type="number" inputMode="numeric" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
         </div>
 
         <div className="field-label">Color del botón</div>
