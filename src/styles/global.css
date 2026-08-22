@@ -800,7 +800,16 @@ input::placeholder { color: var(--text-faint); }
 
 .chevron.open { transform: rotate(180deg); }
 
-.picker-sheet .sheet-title { margin-bottom: 16px; }
+/* El título de una hoja de selección es una etiqueta, no un encabezado: lo
+   que importa son las opciones, no el rótulo de arriba. */
+.sheet-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-bottom: 14px;
+}
 
 .picker-list {
   display: flex;

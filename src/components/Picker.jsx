@@ -52,7 +52,7 @@ export default function Picker({ value, options, onChange, placeholder = 'Elegir
       {open && (
         <div className="overlay" onClick={() => setOpen(false)}>
           <div className="sheet picker-sheet" onClick={(e) => e.stopPropagation()}>
-            {title && <div className="sheet-title">{title}</div>}
+            {title && <div className="sheet-label">{title}</div>}
 
             <div className="picker-list">
               {options.map((o) => (
