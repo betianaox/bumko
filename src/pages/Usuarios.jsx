@@ -130,12 +130,7 @@ export default function Usuarios() {
                     {soyYo(u) && <span className="you">vos</span>}
                   </div>
                   <div className="user-mail">{u.email || u.id}</div>
-                  {(u.createdAt || u.lastSeen) && (
-                    <div className="user-fechas">
-                      {u.createdAt && <span>Entró: {fecha(u.createdAt)}</span>}
-                      {u.lastSeen && <span className="tenue">Última: {fecha(u.lastSeen)}</span>}
-                    </div>
-                  )}
+                  {u.createdAt && <div className="user-fechas">Entró: {fecha(u.createdAt)}</div>}
                 </div>
               </div>
 

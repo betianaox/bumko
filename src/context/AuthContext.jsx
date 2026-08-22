@@ -123,7 +123,6 @@ export function AuthProvider({ children }) {
 
           /* El nombre y la foto los pone Google, no la app: si el registro se
              creó a mano o la persona cambió su cuenta, acá se ponen al día.
-             De paso queda registrada esta visita.
 
              Una sola vez por sesión: esto corre dentro del onSnapshot, así que
              escribir vuelve a disparar el callback y sin el freno serían dos
@@ -135,7 +134,6 @@ export function AuthProvider({ children }) {
               {
                 name: fbUser.displayName || data.name || email,
                 photo: fbUser.photoURL || null,
-                lastSeen: serverTimestamp(),
               },
               { merge: true },
             ).catch(() => {})
