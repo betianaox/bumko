@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { onSnapshot, orderBy, query } from './data'
+import { doc, onSnapshot, orderBy, query } from './data'
 import { barCol } from './bar'
+import { db } from './firebase'
 
 /* El estado del bar, en un solo lugar.
 
@@ -19,11 +20,18 @@ import { barCol } from './bar'
 
 const vacio = { items: [], listo: false }
 
-export const useBar = create((set, get) => ({
+const limpio = {
   barId: null,
   productos: vacio,
   eventos: vacio,
   ventas: vacio,
+  equipo: vacio,
+  bar: null,          // el documento del bar: nombre, dueño, entrada libre
+  caja: null,         // la caja guardada para la próxima noche
+}
+
+export const useBar = create((set, get) => ({
+  ...limpio,
 
   // Las bajas de cada escucha, para cortarlas al cambiar de bar o cerrar sesión
   _cortar: [],
@@ -34,7 +42,7 @@ export const useBar = create((set, get) => ({
 
     if (!barId) return
 
-    const escuchar = (sub, campo, orden) => onSnapshot(
+    const lista = (sub, campo, orden) => onSnapshot(
       query(barCol(barId, sub), orderBy(orden.campo, orden.dir)),
       (snap) => set({
         [campo]: { items: snap.docs.map((d) => ({ id: d.id, ...d.data() })), listo: true },
@@ -42,20 +50,28 @@ export const useBar = create((set, get) => ({
     )
 
     set({
+      ...limpio,
       barId,
-      productos: vacio,
-      eventos: vacio,
-      ventas: vacio,
       _cortar: [
-        escuchar('products', 'productos', { campo: 'name', dir: 'asc' }),
-        escuchar('events', 'eventos', { campo: 'startedAt', dir: 'desc' }),
-        escuchar('sales', 'ventas', { campo: 'createdAt', dir: 'desc' }),
+        lista('products', 'productos', { campo: 'name', dir: 'asc' }),
+        lista('events', 'eventos', { campo: 'startedAt', dir: 'desc' }),
+        lista('sales', 'ventas', { campo: 'createdAt', dir: 'desc' }),
+        lista('equipo', 'equipo', { campo: 'email', dir: 'asc' }),
+
+        onSnapshot(doc(db, 'bares', barId), (snap) => {
+          set({ bar: snap.exists() ? snap.data() : null })
+        }),
+
+        onSnapshot(barCol(barId, 'settings'), (snap) => {
+          const c = snap.docs.find((d) => d.id === 'caja')
+          set({ caja: c ? c.data().openingCash ?? null : null })
+        }),
       ],
     })
   },
 
   desconectar: () => {
     get()._cortar.forEach((cortar) => cortar())
-    set({ barId: null, productos: vacio, eventos: vacio, ventas: vacio, _cortar: [] })
+    set({ ...limpio, _cortar: [] })
   },
 }))

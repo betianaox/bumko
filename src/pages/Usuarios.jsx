@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import { onSnapshot, doc, updateDoc, deleteDoc } from '../data'
+import { useState } from 'react'
+import { doc, updateDoc, deleteDoc } from '../data'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import { barCol, barDoc, usuarioDoc } from '../bar'
+import { barDoc, usuarioDoc } from '../bar'
+import { useBar } from '../store'
 import Dialog from '../components/Dialog'
 import Switch from '../components/Switch'
 import { TrashIcon } from '../components/icons'
@@ -30,25 +31,12 @@ function fecha(ts) {
 
 export default function Usuarios() {
   const { user, isAdmin, isDev, barId } = useAuth()
-  const [users, setUsers] = useState([])
   const [dialog, setDialog] = useState(null)
-  const [bar, setBar] = useState(null)
 
-  useEffect(() => {
-    if (!barId) return
-    return onSnapshot(barCol(barId, 'equipo'), (snap) => {
-      setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    })
-  }, [barId])
-
+  const { items: users } = useBar((e) => e.equipo)
   // La puerta abierta: mientras esté prendida, cualquiera que entre con Google
-  // desde el link de esta web se suma solo como staff, sin que nadie lo invite.
-  useEffect(() => {
-    if (!barId) return
-    return onSnapshot(doc(db, 'bares', barId), (snap) => {
-      setBar(snap.exists() ? snap.data() : null)
-    })
-  }, [barId])
+  // desde el link de esta web se suma solo, sin que nadie lo invite.
+  const bar = useBar((e) => e.bar)
 
   const togglePuerta = async () => {
     await updateDoc(doc(db, 'bares', barId), { autoJoin: !bar?.autoJoin })

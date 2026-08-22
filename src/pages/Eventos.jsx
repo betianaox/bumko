@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { onSnapshot, addDoc, updateDoc, serverTimestamp } from '../data'
+import { addDoc, updateDoc, serverTimestamp } from '../data'
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc } from '../bar'
 import { useBar } from '../store'
@@ -26,7 +26,6 @@ export default function Eventos({ activeEvent }) {
   const [openingCash, setOpeningCash] = useState(String(CAJA_SUGERIDA))
   const [editingCash, setEditingCash] = useState(null)
   const [confirmStop, setConfirmStop] = useState(false)
-  const [savedCash, setSavedCash] = useState(0)
 
   const { items: events } = useBar((e) => e.eventos)
   const { items: ventas } = useBar((e) => e.ventas)
@@ -36,18 +35,15 @@ export default function Eventos({ activeEvent }) {
     ? ventas.filter((s) => s.eventId === activeEvent.id && !s.dev)
     : []
 
-  // La caja que se dejó cargada desde Stock es el valor por defecto de la noche:
-  // aparece escrita en el campo, para verla y poder cambiarla.
+  /* Si el bar tiene una caja guardada, gana sobre la sugerida: es la real.
+     Se escribe en el campo para verla y poder cambiarla. */
+  const guardada = useBar((e) => e.caja)
+  const savedCash = guardada || 0
+
   useEffect(() => {
-    if (!barId) return
-    return onSnapshot(barCol(barId, 'settings'), (snap) => {
-      const s = snap.docs.find((d) => d.id === 'caja')
-      // Si hay una caja guardada, gana sobre la sugerida: es la real del bar.
-      const guardada = s ? s.data().openingCash : null
-      setSavedCash(guardada || 0)
-      if (guardada) setOpeningCash((actual) => (actual === String(CAJA_SUGERIDA) ? String(guardada) : actual))
-    })
-  }, [barId])
+    if (!guardada) return
+    setOpeningCash((actual) => (actual === String(CAJA_SUGERIDA) ? String(guardada) : actual))
+  }, [guardada])
 
   const handleStart = async () => {
     const name = newName.trim() || nombreSugerido()
