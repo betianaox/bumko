@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  onSnapshot, query, orderBy, addDoc, updateDoc,
-  increment, serverTimestamp, deleteDoc,
-} from '../data'
+import { addDoc, updateDoc, increment, serverTimestamp, deleteDoc } from '../data'
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc } from '../bar'
 import SaleModal from '../components/SaleModal'
 import { toneOf } from '../productTone'
+import { useBar } from '../store'
 import { BoxIcon, UndoIcon, CloseIcon } from '../components/icons'
 
 const LONG_PRESS_MS = 450   // a partir de acá es "quiero una variante", no una venta
@@ -20,7 +18,6 @@ function buzz(pattern) {
 
 export default function Venta({ activeEvent }) {
   const { user, barId, isDev } = useAuth()
-  const [products, setProducts] = useState([])
   const [selected, setSelected] = useState(null)
   const [recent, setRecent] = useState([])
   const [confirmUndo, setConfirmUndo] = useState(null)
@@ -29,15 +26,11 @@ export default function Venta({ activeEvent }) {
   const pressTimer = useRef(null)
   const longFired = useRef(false)
 
-  useEffect(() => {
-    if (!barId) return
-    const q = query(barCol(barId, 'products'), orderBy('name'))
-    return onSnapshot(q, (snap) => {
-      // Los ocultos no se muestran acá: siguen existiendo, con su stock y su
-      // historia, pero esta noche no se venden.
-      setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => p.visible !== false))
-    })
-  }, [barId])
+  const { items: todos, listo } = useBar((e) => e.productos)
+
+  // Los ocultos siguen existiendo, con su stock y su historia, pero esta
+  // noche no se venden.
+  const products = todos.filter((p) => p.visible !== false)
 
   // Los movimientos viejos se caen solos: deshacer algo de hace 5 minutos es peor que no deshacerlo
   useEffect(() => {
@@ -138,7 +131,7 @@ export default function Venta({ activeEvent }) {
 
   return (
     <div>
-      {products.length === 0 && (
+      {listo && products.length === 0 && (
         <div className="empty-state">
           <span className="em"><BoxIcon /></span>
           <div className="big">Todavía no cargaste productos</div>

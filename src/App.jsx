@@ -1,7 +1,6 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import { onSnapshot, query, where, limit } from './data'
-import { barCol } from './bar'
+import { useBar } from './store'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Nav from './components/Nav'
@@ -25,16 +24,19 @@ function SoloAdmin({ isAdmin }) {
 
 export default function App() {
   const { authorized, loading, isAdmin, barId, pendiente } = useAuth()
-  const [activeEvent, setActiveEvent] = useState(null)
+
+  /* Las escuchas se abren una vez, acá, y viven mientras dure la sesión: las
+     pantallas leen del store y cambiar de pestaña no vuelve a pedir nada. */
+  const conectar = useBar((e) => e.conectar)
+  const desconectar = useBar((e) => e.desconectar)
+  const eventos = useBar((e) => e.eventos.items)
 
   useEffect(() => {
-    if (!authorized || !barId) return
-    const q = query(barCol(barId, 'events'), where('status', '==', 'live'), limit(1))
-    return onSnapshot(q, (snap) => {
-      if (snap.empty) setActiveEvent(null)
-      else setActiveEvent({ id: snap.docs[0].id, ...snap.docs[0].data() })
-    })
-  }, [authorized, barId])
+    if (authorized && barId) conectar(barId)
+    else desconectar()
+  }, [authorized, barId, conectar, desconectar])
+
+  const activeEvent = eventos.find((e) => e.status === 'live') || null
 
   // Mientras resuelve, la misma pantalla con el logo y nada más: así el paso
   // por Google no parpadea entre el login y la app.

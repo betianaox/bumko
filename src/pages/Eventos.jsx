@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { onSnapshot, query, orderBy, addDoc, updateDoc, serverTimestamp, where } from '../data'
+import { onSnapshot, addDoc, updateDoc, serverTimestamp } from '../data'
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc } from '../bar'
+import { useBar } from '../store'
 import Dialog from '../components/Dialog'
 import { PlayIcon, StopIcon } from '../components/icons'
 
@@ -21,26 +22,19 @@ function nombreSugerido(d = new Date()) {
 
 export default function Eventos({ activeEvent }) {
   const { barId } = useAuth()
-  const [events, setEvents] = useState([])
   const [newName, setNewName] = useState(nombreSugerido)
   const [openingCash, setOpeningCash] = useState(String(CAJA_SUGERIDA))
-  const [liveSales, setLiveSales] = useState([])
   const [editingCash, setEditingCash] = useState(null)
   const [confirmStop, setConfirmStop] = useState(false)
   const [savedCash, setSavedCash] = useState(0)
 
-  useEffect(() => {
-    if (!barId) return
-    const q = query(barCol(barId, 'events'), orderBy('startedAt', 'desc'))
-    return onSnapshot(q, (snap) => setEvents(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-  }, [barId])
+  const { items: events } = useBar((e) => e.eventos)
+  const { items: ventas } = useBar((e) => e.ventas)
 
-  useEffect(() => {
-    if (!activeEvent || !barId) { setLiveSales([]); return }
-    const q = query(barCol(barId, 'sales'), where('eventId', '==', activeEvent.id))
-    // Las pruebas de un dev no cuentan para la caja de la noche
-    return onSnapshot(q, (snap) => setLiveSales(snap.docs.map((d) => d.data()).filter((s) => !s.dev)))
-  }, [activeEvent, barId])
+  // Lo de esta noche. Las pruebas de un dev no cuentan para la caja.
+  const liveSales = activeEvent
+    ? ventas.filter((s) => s.eventId === activeEvent.id && !s.dev)
+    : []
 
   // La caja que se dejó cargada desde Stock es el valor por defecto de la noche:
   // aparece escrita en el campo, para verla y poder cambiarla.

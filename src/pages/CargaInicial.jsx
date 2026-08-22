@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
-import {
-  onSnapshot, query, orderBy, addDoc,
-  updateDoc, deleteDoc, increment,
-} from '../data'
+import { addDoc, updateDoc, deleteDoc, increment } from '../data'
 import { barCol, barDoc } from '../bar'
 import { toneOf } from '../productTone'
+import { useBar } from '../store'
 import TonePicker from '../components/TonePicker'
 import Dialog from '../components/Dialog'
 import { TrashIcon, PlusIcon, BoxIcon, EyeIcon, EyeOffIcon } from '../components/icons'
@@ -13,7 +11,6 @@ import { resetDemoData } from '../demo/mockDb'
 
 export default function CargaInicial() {
   const { demo, barId } = useAuth()
-  const [products, setProducts] = useState([])
   const [name, setName] = useState('')
   const [cost, setCost] = useState('')
   const [price, setPrice] = useState('')
@@ -23,11 +20,7 @@ export default function CargaInicial() {
   const [editingTone, setEditingTone] = useState(null)
   const [dialog, setDialog] = useState(null)      // { kind: 'restock' | 'delete', product }
 
-  useEffect(() => {
-    if (!barId) return
-    const q = query(barCol(barId, 'products'), orderBy('name'))
-    return onSnapshot(q, (snap) => setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-  }, [barId])
+  const { items: products, listo } = useBar((e) => e.productos)
 
   const canAdd = name.trim() && price !== '' && stock !== ''
 
@@ -149,7 +142,7 @@ export default function CargaInicial() {
             )}
           </div>
         ))}
-        {products.length === 0 && (
+        {listo && products.length === 0 && (
           <div className="empty-state">
             <span className="em"><BoxIcon /></span>
             Todavía no hay productos cargados.

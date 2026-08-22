@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { onSnapshot, query, orderBy } from '../data'
-import { useAuth } from '../context/AuthContext'
-import { barCol } from '../bar'
+import { useMemo, useState } from 'react'
+import { useBar } from '../store'
 import Picker from '../components/Picker'
 import { ArrowRightIcon, CloseIcon, ListIcon, ChartIcon } from '../components/icons'
 import { Columnas, Barras, Composicion } from '../components/Charts'
@@ -72,26 +70,13 @@ const mesActual = () => {
 }
 
 export default function Reportes() {
-  const { barId } = useAuth()
-  const [sales, setSales] = useState([])
-  const [events, setEvents] = useState([])
+  const { items: sales, listo } = useBar((e) => e.ventas)
+  const { items: events } = useBar((e) => e.eventos)
   const [mode, setMode] = useState('dia')
   const [from, setFrom] = useState(() => mesActual()[0])
   const [to, setTo] = useState(() => mesActual()[1])
   const [eventId, setEventId] = useState('')   // '' = no filtra por evento
   const [vista, setVista] = useState('lista')
-
-  useEffect(() => {
-    if (!barId) return
-    const q = query(barCol(barId, 'sales'), orderBy('createdAt', 'desc'))
-    return onSnapshot(q, (snap) => setSales(snap.docs.map((d) => d.data())))
-  }, [barId])
-
-  useEffect(() => {
-    if (!barId) return
-    const q = query(barCol(barId, 'events'), orderBy('startedAt', 'desc'))
-    return onSnapshot(q, (snap) => setEvents(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
-  }, [barId])
 
   // El filtro corre sobre la fecha real de la venta, incluso cuando estás
   // mirando por evento: "el finde pasado, evento por evento" es una pregunta válida.
@@ -250,7 +235,7 @@ export default function Reportes() {
 
       </div>
 
-      {groups.length === 0 && (
+      {listo && groups.length === 0 && (
         <div className="empty-state">
           {from || to || eventId
             ? 'No hay ventas con esos filtros.'
