@@ -1064,24 +1064,6 @@ input::placeholder { color: var(--text-faint); }
   background: var(--tone);
 }
 
-/* ---------- Caja inicial ---------- */
-
-.cash-now {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.cash-val {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 30px;
-  letter-spacing: -0.02em;
-}
-
-.cash-lbl { font-size: 13px; color: var(--text-faint); }
-
 /* ---------- Formularios y listas ---------- */
 
 .form-card {

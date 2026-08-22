@@ -42,7 +42,7 @@ export default function App() {
           <Route path="/" element={<Venta activeEvent={activeEvent} />} />
           <Route element={<SoloAdmin isAdmin={isAdmin} />}>
             <Route path="/eventos" element={<Eventos activeEvent={activeEvent} />} />
-            <Route path="/productos" element={<CargaInicial activeEvent={activeEvent} />} />
+            <Route path="/productos" element={<CargaInicial />} />
             <Route path="/reportes" element={<Reportes />} />
             <Route path="/usuarios" element={<Usuarios />} />
           </Route>

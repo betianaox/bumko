@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  onSnapshot, query, orderBy, addDoc, setDoc,
+  onSnapshot, query, orderBy, addDoc,
   updateDoc, deleteDoc, increment,
 } from '../data'
 import { barCol, barDoc } from '../bar'
@@ -11,9 +11,7 @@ import { TrashIcon, PlusIcon, BoxIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resetDemoData } from '../demo/mockDb'
 
-const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
-
-export default function CargaInicial({ activeEvent }) {
+export default function CargaInicial() {
   const { demo, barId } = useAuth()
   const [products, setProducts] = useState([])
   const [name, setName] = useState('')
@@ -25,36 +23,11 @@ export default function CargaInicial({ activeEvent }) {
   const [editingTone, setEditingTone] = useState(null)
   const [dialog, setDialog] = useState(null)      // { kind: 'restock' | 'delete', product }
 
-  const [cash, setCash] = useState('')
-  const [savedCash, setSavedCash] = useState(0)   // caja guardada para la próxima noche
-
   useEffect(() => {
     if (!barId) return
     const q = query(barCol(barId, 'products'), orderBy('name'))
     return onSnapshot(q, (snap) => setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
   }, [barId])
-
-  // Sin evento en curso la caja queda guardada acá y la toma el próximo evento.
-  useEffect(() => {
-    if (!barId) return
-    return onSnapshot(barCol(barId, 'settings'), (snap) => {
-      const s = snap.docs.find((d) => d.id === 'caja')
-      setSavedCash(s ? s.data().openingCash || 0 : 0)
-    })
-  }, [barId])
-
-  const cajaActual = activeEvent ? (activeEvent.openingCash || 0) : savedCash
-
-  const handleSaveCash = async () => {
-    const n = cash === '' ? 0 : Number(cash)
-    if (Number.isNaN(n)) return
-    if (activeEvent) {
-      await updateDoc(barDoc(barId, 'events', activeEvent.id), { openingCash: n })
-    } else {
-      await setDoc(barDoc(barId, 'settings', 'caja'), { openingCash: n }, { merge: true })
-    }
-    setCash('')
-  }
 
   const canAdd = name.trim() && price !== '' && stock !== ''
 
@@ -94,33 +67,6 @@ export default function CargaInicial({ activeEvent }) {
 
   return (
     <div>
-      <div className="section-title">Caja inicial</div>
-      <div className="form-card">
-        <div className="cash-now">
-          <span className="cash-val">{money(cajaActual)}</span>
-          <span className="cash-lbl">
-            {activeEvent ? `en ${activeEvent.name}` : 'para la próxima noche'}
-          </span>
-        </div>
-        <div className="form-row" style={{ marginBottom: 0 }}>
-          <input
-            type="number"
-            inputMode="numeric"
-            placeholder="Cambio con el que arrancás"
-            value={cash}
-            onChange={(e) => setCash(e.target.value)}
-          />
-          <button
-            className="btn-primary"
-            style={{ width: 'auto', padding: '0 22px', marginTop: 0 }}
-            disabled={cash === ''}
-            onClick={handleSaveCash}
-          >
-            Guardar
-          </button>
-        </div>
-      </div>
-
       <div className="section-title">Nuevo producto</div>
       <div className="form-card">
         <div className="form-row">
