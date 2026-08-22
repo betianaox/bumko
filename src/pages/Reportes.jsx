@@ -3,6 +3,7 @@ import { onSnapshot, query, orderBy } from '../data'
 import { useAuth } from '../context/AuthContext'
 import { barCol } from '../bar'
 import Picker from '../components/Picker'
+import { ArrowRightIcon, CloseIcon } from '../components/icons'
 
 // "Por evento" dejó de ser una agrupación: ahora el evento es un filtro más,
 // y elegido uno podés seguir mirándolo por día o por mes.
@@ -181,7 +182,7 @@ export default function Reportes() {
           max={to || undefined}
           onChange={(e) => setFrom(e.target.value)}
         />
-        <span className="date-sep">→</span>
+        <span className="date-sep"><ArrowRightIcon /></span>
         <input
           type="date"
           aria-label="Hasta"
@@ -196,7 +197,7 @@ export default function Reportes() {
             aria-label="Quitar el filtro de fechas"
             onClick={() => { setFrom(''); setTo('') }}
           >
-            ✕
+            <CloseIcon />
           </button>
         )}
       </div>

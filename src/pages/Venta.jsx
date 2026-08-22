@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc } from '../bar'
 import SaleModal from '../components/SaleModal'
 import { toneOf } from '../productTone'
+import { BoxIcon, UndoIcon, CloseIcon } from '../components/icons'
 
 const LONG_PRESS_MS = 450   // a partir de acá es "quiero una variante", no una venta
 const RECENT_MAX = 5
@@ -132,7 +133,7 @@ export default function Venta({ activeEvent }) {
     <div>
       {products.length === 0 && (
         <div className="empty-state">
-          <span className="em">📦</span>
+          <span className="em"><BoxIcon /></span>
           <div className="big">Todavía no cargaste productos</div>
           <div>Andá a la pestaña Stock para empezar.</div>
         </div>
@@ -184,7 +185,7 @@ export default function Venta({ activeEvent }) {
 
       {recent.length > 0 && (
         <div className="recent-bar">
-          <span className="recent-label">↩ Deshacer</span>
+          <span className="recent-label"><UndoIcon /> Deshacer</span>
           {recent.map((r) => {
             const confirming = confirmUndo === r.saleId
             return (
@@ -198,7 +199,7 @@ export default function Venta({ activeEvent }) {
                 onClick={() => (confirming ? handleUndo(r) : setConfirmUndo(r.saleId))}
               >
                 {confirming ? (
-                  <span className="rn">Anular ✕</span>
+                  <span className="rn">Anular <CloseIcon /></span>
                 ) : (
                   <>
                     <span className="rn">{r.productName}</span>

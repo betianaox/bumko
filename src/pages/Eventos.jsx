@@ -3,6 +3,7 @@ import { onSnapshot, query, orderBy, addDoc, updateDoc, serverTimestamp, where }
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc } from '../bar'
 import Dialog from '../components/Dialog'
+import { PlayIcon, StopIcon } from '../components/icons'
 
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
 
@@ -121,7 +122,7 @@ export default function Eventos({ activeEvent }) {
           )}
 
           <div style={{ marginTop: 8 }}>
-            <button className="btn-stop" onClick={() => setConfirmStop(true)}><span>⏹</span> Cerrar evento</button>
+            <button className="btn-stop" onClick={() => setConfirmStop(true)}><StopIcon /> Cerrar evento</button>
           </div>
         </div>
       ) : (
@@ -143,7 +144,7 @@ export default function Eventos({ activeEvent }) {
               onChange={(e) => setOpeningCash(e.target.value)}
             />
           </div>
-          <button className="btn-start" onClick={handleStart}><span>▶</span> Iniciar evento</button>
+          <button className="btn-start" onClick={handleStart}><PlayIcon /> Iniciar evento</button>
         </div>
       )}
 

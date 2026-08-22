@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { CashIcon, TagIcon, GiftIcon } from './icons'
 
 const GIFT_REASONS = ['Invitación del dueño', 'Cortesía a cliente', 'Error de cobro', 'Staff']
 
@@ -49,21 +50,21 @@ export default function SaleModal({ product, onConfirm, onClose }) {
             className={'mode-btn regular' + (mode === 'regular' ? ' selected' : '')}
             onClick={() => setMode('regular')}
           >
-            <span className="m-icon">💵</span>
+            <span className="m-icon"><CashIcon /></span>
             Precio regular
           </button>
           <button
             className={'mode-btn custom' + (mode === 'custom' ? ' selected' : '')}
             onClick={() => setMode('custom')}
           >
-            <span className="m-icon">🏷️</span>
+            <span className="m-icon"><TagIcon /></span>
             Otro precio
           </button>
           <button
             className={'mode-btn gift' + (mode === 'gift' ? ' selected' : '')}
             onClick={() => setMode('gift')}
           >
-            <span className="m-icon">🎁</span>
+            <span className="m-icon"><GiftIcon /></span>
             Regalar
           </button>
         </div>

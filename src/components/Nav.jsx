@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { SunIcon, MoonIcon } from './icons'
+import { SunIcon, MoonIcon, PowerIcon } from './icons'
 import Logo from './Logo'
 
 /* Iconos de línea, un solo color, heredando el del tab. Los emoji traían su
@@ -91,7 +91,11 @@ export default function Nav({ activeEvent }) {
 
         {/* En demo no hay sesión que cerrar. El reset vive en Stock, abajo de todo:
             un ↺ acá arriba se lee como "deshacer" y no lo es. */}
-        {!demo && <button className="icon-btn" onClick={signOut}>⏻</button>}
+        {!demo && (
+          <button className="icon-btn" onClick={signOut} aria-label="Cerrar sesión">
+            <PowerIcon />
+          </button>
+        )}
       </div>
 
       {/* La navegación va abajo: es donde llega el pulgar con el celular en una mano */}

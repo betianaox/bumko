@@ -7,7 +7,7 @@ import { barCol, barDoc } from '../bar'
 import { toneOf } from '../productTone'
 import TonePicker from '../components/TonePicker'
 import Dialog from '../components/Dialog'
-import { TrashIcon } from '../components/icons'
+import { TrashIcon, PlusIcon, BoxIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resetDemoData } from '../demo/mockDb'
 
@@ -138,7 +138,7 @@ export default function CargaInicial({ activeEvent }) {
         <div className="field-label">Color del botón</div>
         <TonePicker value={tone} onChange={setTone} />
 
-        <button className="btn-primary" disabled={!canAdd} onClick={handleAdd}><span>＋</span> Agregar producto</button>
+        <button className="btn-primary" disabled={!canAdd} onClick={handleAdd}><PlusIcon /> Agregar producto</button>
       </div>
 
       <div className="section-title">Productos cargados ({products.length})</div>
@@ -158,7 +158,13 @@ export default function CargaInicial({ activeEvent }) {
                 </div>
               </div>
               <div className="row-actions">
-                <button className="icon-btn" onClick={() => setDialog({ kind: 'restock', product: p })}>＋</button>
+                <button
+                  className="icon-btn"
+                  aria-label={`Sumar stock a ${p.name}`}
+                  onClick={() => setDialog({ kind: 'restock', product: p })}
+                >
+                  <PlusIcon />
+                </button>
                 <button
                   className="icon-btn danger"
                   aria-label={`Borrar ${p.name}`}
@@ -178,7 +184,7 @@ export default function CargaInicial({ activeEvent }) {
         ))}
         {products.length === 0 && (
           <div className="empty-state">
-            <span className="em">📦</span>
+            <span className="em"><BoxIcon /></span>
             Todavía no hay productos cargados.
           </div>
         )}
