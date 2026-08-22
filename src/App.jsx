@@ -10,6 +10,7 @@ import CargaInicial from './pages/CargaInicial'
 import Eventos from './pages/Eventos'
 import Reportes from './pages/Reportes'
 import Usuarios from './pages/Usuarios'
+import Pendiente from './pages/Pendiente'
 
 /* El tab deshabilitado evita el clic, pero la URL se puede escribir a mano:
    la restricción de verdad va acá. Las reglas de Firestore son la tercera
@@ -19,7 +20,7 @@ function SoloAdmin({ isAdmin }) {
 }
 
 export default function App() {
-  const { authorized, loading, isAdmin, barId } = useAuth()
+  const { authorized, loading, isAdmin, barId, pendiente } = useAuth()
   const [activeEvent, setActiveEvent] = useState(null)
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function App() {
     <div className="app-shell">
       <Nav activeEvent={activeEvent} />
       <div className="main">
+        {pendiente ? <Pendiente /> : (
         <Routes>
           <Route path="/" element={<Venta activeEvent={activeEvent} />} />
           <Route element={<SoloAdmin isAdmin={isAdmin} />}>
@@ -48,6 +50,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        )}
       </div>
     </div>
   )

@@ -2,23 +2,16 @@ import { useAuth } from '../context/AuthContext'
 import Logo from '../components/Logo'
 
 export default function Login() {
-  const { user, authorized, loading, error, signIn, signOut } = useAuth()
+  const { user, authorized, pendiente, loading, error, signIn, signOut } = useAuth()
 
-  // Las tres situaciones comparten pantalla y logo; solo cambia lo de abajo.
+  /* Cuatro situaciones, una sola pantalla: cargando, sin sesión, esperando
+     que lo habiliten, y con sesión abierta pero fuera de todo bar.
+     Solo cambia lo que va debajo del logo. */
   return (
     <div className="login-screen">
       <Logo className="login-logo" />
 
-      {!loading && (user && !authorized ? (
-        <>
-          <p className="login-sub">
-            Entraste como <strong>{user.email}</strong>, pero ese mail todavía no
-            está en ningún bar. Pedile a quien administra el tuyo que te invite
-            con esa misma dirección.
-          </p>
-          <button className="google-btn" onClick={signOut}>Probar con otra cuenta</button>
-        </>
-      ) : (
+      {loading ? null : !user ? (
         <>
           <p className="login-sub">Control de stock. Entrá con tu cuenta de Google del equipo.</p>
           <button className="google-btn" onClick={signIn}>
@@ -27,7 +20,29 @@ export default function Login() {
           </button>
           {error && <p className="login-error">{error}</p>}
         </>
-      ))}
+      ) : pendiente ? (
+        <>
+          <div className="wait-badge">Esperando aprobación</div>
+          <p className="login-sub">
+            Ya quedaste anotado como <strong>{user.email}</strong>. Pedile a quien
+            administra el bar que te habilite: hasta entonces no vas a poder
+            registrar nada.
+          </p>
+          <button className="google-btn" onClick={() => window.location.reload()}>
+            Ya me habilitaron
+          </button>
+          <button className="link-btn" onClick={signOut}>Entrar con otra cuenta</button>
+        </>
+      ) : !authorized ? (
+        <>
+          <p className="login-sub">
+            Entraste como <strong>{user.email}</strong>, pero ese mail no está en
+            ningún bar. Pedile a quien administra el tuyo que te sume con esa
+            misma dirección.
+          </p>
+          <button className="google-btn" onClick={signOut}>Probar con otra cuenta</button>
+        </>
+      ) : null}
     </div>
   )
 }

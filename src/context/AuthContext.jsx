@@ -28,6 +28,8 @@ export function AuthProvider({ children }) {
   const [authorized, setAuthorized] = useState(DEMO)
   const [role, setRole] = useState(DEMO ? 'admin' : null)
   const [barId, setBarId] = useState(DEMO ? DEMO_BAR : null)
+  // Está en el equipo pero todavía no lo habilitaron
+  const [pendiente, setPendiente] = useState(false)
   const [loading, setLoading] = useState(!DEMO)
   const [error, setError] = useState('')
 
@@ -66,7 +68,9 @@ export function AuthProvider({ children }) {
               email,
               name: fbUser.displayName || email,
               role: 'staff',
-              active: true,
+              // Entra a la lista, pero apagado: poder anotarse solo no es lo
+              // mismo que poder vender. Un admin lo habilita desde Equipo.
+              active: false,
               createdAt: serverTimestamp(),
             })
             await setDoc(usuarioDoc(email), { barId: BAR_ID })
@@ -89,7 +93,10 @@ export function AuthProvider({ children }) {
         setUser({ ...fbUser, teamData: data })
         setBarId(bar)
         setRole(data.role || 'staff')
-        setAuthorized(miembro.exists() && data.active !== false)
+        // Suspendido entra igual: la app se muestra bloqueada por dentro, que
+        // se entiende mucho mejor que un cartel en la puerta.
+        setPendiente(miembro.exists() && data.active === false)
+        setAuthorized(miembro.exists())
       } catch (e) {
         console.error(e)
         setUser(fbUser)
@@ -122,10 +129,12 @@ export function AuthProvider({ children }) {
         user,
         barId,
         authorized,
+        pendiente,
         role: verComoStaff ? 'staff' : role,
-        // dev puede lo mismo que admin: es un rol de mantenimiento, no de negocio
-        isAdmin: (role === 'admin' || role === 'dev') && !verComoStaff,
-        isDev: role === 'dev' && !verComoStaff,
+        // dev puede lo mismo que admin: es un rol de mantenimiento, no de negocio.
+        // Suspendido no puede nada, sea cual sea su rol.
+        isAdmin: (role === 'admin' || role === 'dev') && !verComoStaff && !pendiente,
+        isDev: role === 'dev' && !verComoStaff && !pendiente,
         loading,
         error,
         signIn,

@@ -121,3 +121,10 @@ export const ChartIcon = () => (
     <path d="M5 20V10M12 20V4M19 20v-7" />
   </svg>
 )
+
+export const LockIcon = () => (
+  <svg {...base} width="12" height="12" strokeWidth="2.6">
+    <rect x="4" y="10" width="16" height="11" rx="2.5" />
+    <path d="M8 10V7a4 4 0 018 0v3" />
+  </svg>
+)

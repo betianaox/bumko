@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { SunIcon, MoonIcon, PowerIcon } from './icons'
+import { SunIcon, MoonIcon, PowerIcon, LockIcon } from './icons'
 import Logo from './Logo'
 
 /* Iconos de línea, un solo color, heredando el del tab. Los emoji traían su
@@ -54,7 +54,7 @@ const TABS = [
 ]
 
 export default function Nav({ activeEvent }) {
-  const { signOut, demo, isAdmin, verComoStaff, setVerComoStaff } = useAuth()
+  const { signOut, demo, isAdmin, pendiente, verComoStaff, setVerComoStaff } = useAuth()
   const { theme, toggle } = useTheme()
 
   return (
@@ -106,10 +106,14 @@ export default function Nav({ activeEvent }) {
       {/* La navegación va abajo: es donde llega el pulgar con el celular en una mano */}
       <nav className="tabbar">
         {TABS.map((t) => {
-          if (t.adminOnly && !isAdmin) {
+          // Suspendido no entra a ninguna pestaña, ni siquiera a vender
+          if (pendiente || (t.adminOnly && !isAdmin)) {
             return (
               <span key={t.to} className="tab locked" aria-disabled="true" title="Solo para administradores">
-                {t.icon}
+                <span className="tab-lock-wrap">
+                  {t.icon}
+                  <span className="tab-lock"><LockIcon /></span>
+                </span>
                 {t.label}
               </span>
             )

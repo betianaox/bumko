@@ -20,13 +20,19 @@ service cloud.firestore {
     }
 
     match /bares/{b} {
-      allow read: if delBar(b);
+      // Cualquiera con sesión puede leer el bar: hace falta para saber si tiene
+      // la puerta abierta antes de pertenecer a él. Son tres campos públicos.
+      allow read: if request.auth != null;
       allow create: if request.auth != null && request.resource.data.ownerEmail == yo();
       allow update, delete: if esAdmin(b);
 
       match /equipo/{email} {
-        allow read: if delBar(b);
-        allow create: if request.auth != null && yo() == email && abierta(b) && request.resource.data.role == 'staff';
+        // El propio registro se lee siempre, aunque esté suspendido: si no, la
+        // persona no puede ni enterarse de que está esperando aprobación.
+        allow read: if delBar(b) || (request.auth != null && yo() == email);
+        // Anotarse solo: siempre staff y siempre apagado, lo habilita un admin
+        allow create: if request.auth != null && yo() == email && abierta(b)
+          && request.resource.data.role == 'staff' && request.resource.data.active == false;
         // Nombrar o destituir devs es cosa de devs
         allow update: if esAdmin(b) && (request.resource.data.role != 'dev' || esDev(b)) && (resource.data.role != 'dev' || esDev(b));
         allow delete: if esAdmin(b) && (resource.data.role != 'dev' || esDev(b));
