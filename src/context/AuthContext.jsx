@@ -59,6 +59,11 @@ export function AuthProvider({ children }) {
         return
       }
 
+      // Hay sesión pero todavía no sabemos a qué bar entra ni con qué rol.
+      // Sin esto, el hueco entre que Google responde y que resolvemos el bar
+      // se ve como un parpadeo de la pantalla de login.
+      setLoading(true)
+
       try {
         const email = fbUser.email.toLowerCase()
         const indice = await getDoc(usuarioDoc(email))
@@ -127,10 +132,12 @@ export function AuthProvider({ children }) {
 
   const signIn = async () => {
     setError('')
+    setLoading(true)
     try {
       await signInWithPopup(auth, googleProvider)
     } catch (e) {
       setError('No se pudo iniciar sesión. Probá de nuevo.')
+      setLoading(false)
     }
   }
 

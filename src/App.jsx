@@ -32,8 +32,9 @@ export default function App() {
     })
   }, [authorized, barId])
 
-  if (loading) return null
-  if (!authorized) return <Login />
+  // Mientras resuelve, la misma pantalla con el logo y nada más: así el paso
+  // por Google no parpadea entre el login y la app.
+  if (loading || !authorized) return <Login />
 
   return (
     <div className="app-shell">
