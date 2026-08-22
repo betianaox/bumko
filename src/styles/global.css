@@ -914,29 +914,33 @@ input::placeholder { color: var(--text-faint); }
   --c3: #c98400;   /* regalado */
 }
 
-/* Listado o gráficos: dos iconos chicos al final de la fila de fechas.
-   Es un cambio de lente sobre lo mismo, no un filtro, así que no compite
-   en tamaño con los controles que sí cambian los datos. */
+/* Listado o gráficos. Flota abajo a la derecha, encima de la tab bar: no es
+   un filtro, es con qué lente mirás lo mismo, y ahí llega el pulgar.
+   En desktop se alinea al borde de la columna de contenido. */
 .view-toggle {
+  position: fixed;
+  right: max(14px, calc((100% - var(--shell)) / 2 + 14px));
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px);
+  z-index: 25;
   display: flex;
-  gap: 2px;
-  flex: none;
-  padding: 3px;
-  border-radius: var(--r-sm);
-  background: var(--surface-2);
+  gap: 3px;
+  padding: 4px;
+  border-radius: 100px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .view-ico {
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 100px;
   color: var(--text-faint);
 }
 
-.view-ico svg { width: 18px; height: 18px; }
+.view-ico svg { width: 20px; height: 20px; }
 
 .view-ico.selected { background: var(--invert-bg); color: var(--invert-ink); }
 

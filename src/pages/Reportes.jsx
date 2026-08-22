@@ -244,22 +244,6 @@ export default function Reportes() {
           </button>
         )}
 
-        {/* Los mismos datos, dos lecturas: el listado para buscar un número
-            concreto, los gráficos para ver la forma del período. */}
-        <div className="view-toggle">
-          {VISTAS.map((v) => (
-            <button
-              key={v.id}
-              className={'view-ico' + (vista === v.id ? ' selected' : '')}
-              onClick={() => setVista(v.id)}
-              title={v.label}
-              aria-label={v.label}
-              aria-pressed={vista === v.id}
-            >
-              {v.icon}
-            </button>
-          ))}
-        </div>
       </div>
 
       {groups.length === 0 && (
@@ -380,6 +364,23 @@ export default function Reportes() {
           </div>
         )
       })}
+
+      {/* Cambiar de vista no cambia los datos, así que vive aparte de los
+          filtros: flota abajo a la derecha, al alcance del pulgar. */}
+      <div className="view-toggle">
+        {VISTAS.map((v) => (
+          <button
+            key={v.id}
+            className={'view-ico' + (vista === v.id ? ' selected' : '')}
+            onClick={() => setVista(v.id)}
+            title={v.label}
+            aria-label={v.label}
+            aria-pressed={vista === v.id}
+          >
+            {v.icon}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
