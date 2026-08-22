@@ -244,7 +244,7 @@ input::placeholder { color: var(--text-faint); }
 
 .main {
   flex: 1;
-  padding: 4px 16px calc(var(--tabbar-h) + 24px);
+  padding: 18px 16px calc(var(--tabbar-h) + 24px);
   max-width: var(--shell);
   width: 100%;
   margin: 0 auto;
@@ -373,7 +373,7 @@ input::placeholder { color: var(--text-faint); }
   font-size: 13px;
   color: var(--text-faint);
   text-align: center;
-  padding: 8px 0 14px;
+  padding: 0 0 16px;
   line-height: 1.4;
 }
 
@@ -1420,7 +1420,7 @@ input::placeholder { color: var(--text-faint); }
   margin: 20px 0 10px;
 }
 
-.section-title:first-child { margin-top: 8px; }
+.section-title:first-child { margin-top: 0; }
 
 .breakdown-row {
   display: flex;
