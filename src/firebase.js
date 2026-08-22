@@ -17,10 +17,14 @@ const firebaseConfig = {
 // (auth/invalid-api-key) la app entra en modo demo con datos locales.
 export const DEMO = !firebaseConfig.apiKey || !firebaseConfig.projectId
 
-/* El bar de esta instalación de la web. Quien entra con Google y todavía no
-   pertenece a ningún bar se suma a este, siempre que el bar tenga la puerta
-   abierta. Es propio de la web: en la app nativa cada uno crea el suyo. */
-export const BAR_ID = import.meta.env.VITE_BAR_ID || null
+/* El bar de esta instalación de la web: quien entra con Google y todavía no
+   pertenece a ningún bar se suma a este, si tiene la puerta abierta.
+
+   Va fijo a propósito. Esta versión sirve un solo bar, y tenerlo en una
+   variable de entorno hizo que un olvido en el panel de Vercel dejara gente
+   afuera en la puerta. La variable sigue mandando si está definida, para
+   cuando haya más de un bar o para apuntar a otro mientras se prueba. */
+export const BAR_ID = import.meta.env.VITE_BAR_ID || 'casa'
 
 export const app = DEMO ? null : initializeApp(firebaseConfig)
 export const auth = DEMO ? null : getAuth(app)
