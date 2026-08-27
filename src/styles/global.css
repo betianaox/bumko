@@ -1349,7 +1349,21 @@ input::placeholder { color: var(--text-faint); }
 .eye.off { color: var(--amber-ink); }
 .product-row .meta { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); margin-top: 2px; }
 
-.row-actions { display: flex; gap: 6px; flex: none; }
+/* Cuatro acciones por fila no entran en un teléfono: van en dos por dos */
+.row-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 40px);
+  gap: 6px;
+  flex: none;
+}
+
+.row-actions .icon-btn,
+.row-actions .promo-tag {
+  width: 40px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+}
 
 .icon-btn {
   display: flex;
