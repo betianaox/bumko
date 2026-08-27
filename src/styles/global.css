@@ -411,15 +411,19 @@ input::placeholder { color: var(--text-faint); }
 
 /* El 2x1 se ofrece, no se impone: ocupa una esquina y deja el resto de la
    card para la venta suelta, que sigue siendo la del 90% de la noche. */
+/* Ocupa el pie de la card, de lado a lado: en la esquina se le montaba
+   encima al precio cuando la card es chica. */
 .promo-btn {
   position: absolute;
   left: 8px;
+  right: 8px;
   bottom: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  line-height: 1.1;
-  padding: 8px 13px;
+  justify-content: center;
+  gap: 7px;
+  line-height: 1;
+  padding: 9px 10px;
   border-radius: 100px;
   background: var(--invert-bg);
   color: var(--invert-ink);
@@ -432,10 +436,13 @@ input::placeholder { color: var(--text-faint); }
 .promo-btn:active { transform: scale(0.94); }
 
 .promo-precio {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  opacity: 0.7;
+  opacity: 0.75;
 }
+
+/* La card con promo le deja el pie libre a la pastilla */
+.punch-wrap.con-promo .punch { padding-bottom: 46px; }
 
 /* En Stock, el 2x1 de cada fila: apagado hasta que tiene precio */
 .promo-tag {
@@ -452,15 +459,15 @@ input::placeholder { color: var(--text-faint); }
 
 .punch {
   position: relative;
-  aspect-ratio: 1 / 0.78;   /* más bajo que ancho: entran más filas en pantalla */
+  aspect-ratio: 1 / 1.05;
   border-radius: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  /* Más aire abajo que arriba: el texto sube y le deja lugar al 2x1 */
-  padding: 22px 12px 34px;
+  gap: 4px;
+  /* Arriba deja lugar a la chapita del stock, abajo al 2x1 */
+  padding: 36px 12px 18px;
   width: 100%;
   text-align: center;
   overflow: hidden;
@@ -474,10 +481,12 @@ input::placeholder { color: var(--text-faint); }
 
 .punch:active { transform: scale(0.95); }
 
+/* En un teléfono angosto la card mide unos 150px: el nombre se achica con
+   ella en vez de irse encima de los otros datos. */
 .punch .name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 25px;
+  font-size: clamp(17px, 5.2vw, 25px);
   line-height: 1.05;
   letter-spacing: -0.02em;
   max-width: 100%;
@@ -486,7 +495,7 @@ input::placeholder { color: var(--text-faint); }
 
 .punch .price {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   opacity: 0.72;
 }
@@ -1349,7 +1358,7 @@ input::placeholder { color: var(--text-faint); }
 .eye.off { color: var(--amber-ink); }
 .product-row .meta { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); margin-top: 2px; }
 
-/* Cuatro acciones por fila no entran en un teléfono: van en dos por dos */
+/* Cuatro acciones en una línea no entran en un teléfono: van dos y dos */
 .row-actions {
   display: grid;
   grid-template-columns: repeat(2, 40px);

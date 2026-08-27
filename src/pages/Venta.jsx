@@ -169,7 +169,7 @@ export default function Venta({ activeEvent }) {
             /* El 2x1 va como botón aparte encima de la card y no adentro:
                un botón dentro de otro no es HTML válido, y además así el
                toque en la promo no dispara la venta suelta. */
-            <div className="punch-wrap" key={p.id}>
+            <div className={'punch-wrap' + (conPromo ? ' con-promo' : '')} key={p.id}>
               <button
                 className={'punch ' + (out ? 'out' : `${toneOf(p)}${low ? ' low' : ''}`)}
                 onPointerDown={() => !out && startPress(p)}
