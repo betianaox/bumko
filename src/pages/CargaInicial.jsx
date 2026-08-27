@@ -5,7 +5,7 @@ import { toneOf } from '../productTone'
 import { useBar } from '../store'
 import TonePicker from '../components/TonePicker'
 import Dialog from '../components/Dialog'
-import { TrashIcon, PlusIcon, BoxIcon, EyeIcon, EyeOffIcon } from '../components/icons'
+import { TrashIcon, PlusIcon, BoxIcon, EyeIcon, EyeOffIcon, PencilIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resetDemoData } from '../demo/mockDb'
 
@@ -19,7 +19,8 @@ export default function CargaInicial() {
   const [promo, setPromo] = useState('')
   const [tone, setTone] = useState(null)
   const [editingTone, setEditingTone] = useState(null)
-  const [dialog, setDialog] = useState(null)      // { kind: 'restock' | 'delete', product }
+  const [dialog, setDialog] = useState(null)      // { kind, product }
+  const [edicion, setEdicion] = useState(null)    // campos del producto que se está editando
 
   const { items: products, listo } = useBar((e) => e.productos)
 
@@ -67,6 +68,37 @@ export default function CargaInicial() {
     if (n !== null && Number.isNaN(n)) return
     await updateDoc(barDoc(barId, 'products', p.id), { promoPrice: n })
   }
+
+  /* Editar un producto ya cargado. Antes solo se podía corregir el stock: un
+     precio mal tipeado obligaba a borrarlo y volver a crearlo. */
+  const abrirEdicion = (p) => {
+    setEdicion({
+      id: p.id,
+      name: p.name,
+      cost: String(p.costPrice ?? ''),
+      price: String(p.salePrice ?? ''),
+      threshold: String(p.lowStockThreshold ?? ''),
+      promo: p.promoPrice ? String(p.promoPrice) : '',
+    })
+  }
+
+  const guardarEdicion = async () => {
+    const e = edicion
+    setEdicion(null)
+    if (!e.name.trim() || e.price === '') return
+
+    await updateDoc(barDoc(barId, 'products', e.id), {
+      name: e.name.trim(),
+      costPrice: e.cost === '' ? 0 : Number(e.cost),
+      salePrice: Number(e.price),
+      lowStockThreshold: e.threshold === '' ? 5 : Number(e.threshold),
+      promoPrice: e.promo === '' ? null : Number(e.promo),
+    })
+  }
+
+  // El stock no se edita acá: se suma con el + o baja vendiendo. Escribirlo a
+  // mano pisaría lo que otro vendió mientras tanto.
+  const campo = (k) => (v) => setEdicion((e) => ({ ...e, [k]: v }))
 
   const toggleVisible = async (p) => {
     await updateDoc(barDoc(barId, 'products', p.id), { visible: p.visible === false })
@@ -152,6 +184,13 @@ export default function CargaInicial() {
                   <PlusIcon />
                 </button>
                 <button
+                  className="icon-btn"
+                  aria-label={`Editar ${p.name}`}
+                  onClick={() => abrirEdicion(p)}
+                >
+                  <PencilIcon />
+                </button>
+                <button
                   className="icon-btn danger"
                   aria-label={`Borrar ${p.name}`}
                   onClick={() => setDialog({ kind: 'delete', product: p })}
@@ -191,6 +230,67 @@ export default function CargaInicial() {
           onConfirm={() => { resetDemoData(); setDialog(null) }}
           onClose={() => setDialog(null)}
         />
+      )}
+
+      {edicion && (
+        <Dialog
+          title="Editar producto"
+          confirmLabel="Guardar"
+          onConfirm={guardarEdicion}
+          onClose={() => setEdicion(null)}
+        >
+          <div className="field-label">Nombre</div>
+          <div className="form-row">
+            <input value={edicion.name} onChange={(e) => campo('name')(e.target.value)} />
+          </div>
+
+          <div className="form-row">
+            <label className="campo">
+              <span className="field-label">Costo $</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={edicion.cost}
+                onChange={(e) => campo('cost')(e.target.value)}
+                onFocus={(e) => e.target.select()}
+              />
+            </label>
+            <label className="campo">
+              <span className="field-label">Venta $</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={edicion.price}
+                onChange={(e) => campo('price')(e.target.value)}
+                onFocus={(e) => e.target.select()}
+              />
+            </label>
+          </div>
+
+          <div className="form-row" style={{ marginBottom: 0 }}>
+            <label className="campo">
+              <span className="field-label">Alerta stock</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={edicion.threshold}
+                onChange={(e) => campo('threshold')(e.target.value)}
+                onFocus={(e) => e.target.select()}
+              />
+            </label>
+            <label className="campo">
+              <span className="field-label">2x1 $</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="sin promo"
+                value={edicion.promo}
+                onChange={(e) => campo('promo')(e.target.value)}
+                onFocus={(e) => e.target.select()}
+              />
+            </label>
+          </div>
+        </Dialog>
       )}
 
       {dialog?.kind === 'promo' && (

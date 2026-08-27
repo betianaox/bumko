@@ -1156,6 +1156,28 @@ input::placeholder { color: var(--text-faint); }
   text-align: center;
 }
 
+/* Un formulario adentro del diálogo, cuando un campo solo no alcanza */
+.dialog-form { margin-top: 18px; text-align: left; }
+
+.dialog-form .form-row { margin-bottom: 12px; }
+
+.dialog-form input {
+  width: 100%;
+  padding: 13px 14px;
+  font-size: 16px;
+}
+
+/* Etiqueta arriba de su campo, para que se entienda qué es cada número */
+.campo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.campo .field-label { margin-bottom: 0; }
+
 .dialog-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

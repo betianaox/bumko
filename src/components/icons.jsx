@@ -143,3 +143,10 @@ export const EyeOffIcon = () => (
     <path d="M3 3l18 18" />
   </svg>
 )
+
+export const PencilIcon = () => (
+  <svg {...base}>
+    <path d="M4 20h4L19 9a2.5 2.5 0 10-3.5-3.5L4.5 16.5 4 20z" />
+    <path d="M14.5 6.5L17.5 9.5" />
+  </svg>
+)

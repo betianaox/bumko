@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 export default function Dialog({
   title,
   sub,
+  children,   // un formulario propio, cuando un solo campo no alcanza
   input,                 // { type, inputMode, initial, placeholder }
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
@@ -23,7 +24,9 @@ export default function Dialog({
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose()
-      if (e.key === 'Enter') submit()
+      // Enter confirma cuando hay un campo solo; con un formulario entero
+      // sería demasiado fácil guardar sin querer.
+      if (e.key === 'Enter' && !children) submit()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -54,6 +57,8 @@ export default function Dialog({
             onFocus={(e) => e.target.select()}
           />
         )}
+
+        {children && <div className="dialog-form">{children}</div>}
 
         <div className="dialog-actions">
           <button className="dlg-btn ghost" onClick={onClose}>{cancelLabel}</button>
