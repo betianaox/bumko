@@ -85,7 +85,7 @@
 
   --invert-bg: #ffffff;
   --invert-ink: #0b0b10;
-  --invert-bg-80: rgba(255, 255, 255, 0.8);
+  --promo-bg: rgba(255, 255, 255, 0.2);
 
   /* Colores para escribir, no para rellenar: el de relleno casi nunca sirve
      como texto, y menos cambiando de tema. */
@@ -120,7 +120,9 @@
 
   --invert-bg: #14141c;
   --invert-ink: #ffffff;
-  --invert-bg-80: rgba(20, 20, 28, 0.8);
+  /* Sobre una card clara, un velo blanco no se ve y el texto blanco menos:
+     acá el velo va oscuro para que la pastilla se siga leyendo igual. */
+  --promo-bg: rgba(20, 20, 28, 0.55);
 
   --green-ink: #157a3a;
   --amber-ink: #8a5a00;
@@ -427,9 +429,10 @@ input::placeholder { color: var(--text-faint); }
   line-height: 1;
   padding: 9px 10px;
   border-radius: 100px;
-  /* Translúcido: en blanco pleno tapaba la card en vez de apoyarse encima */
-  background: var(--invert-bg-80);
-  color: var(--invert-ink);
+  /* Apenas un velo sobre el color del producto: la pastilla se apoya en la
+     card en vez de taparla, y el texto blanco la mantiene legible. */
+  background: var(--promo-bg);
+  color: #fff;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 15px;
@@ -437,6 +440,14 @@ input::placeholder { color: var(--text-faint); }
 }
 
 .promo-btn:active { transform: scale(0.94); }
+
+/* El gesto largo es de la card: el botón no puede quedarse el toque */
+.promo-btn {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
 
 .promo-precio {
   font-size: 13px;

@@ -191,9 +191,20 @@ export default function Venta({ activeEvent }) {
               </button>
 
               {conPromo && (
+                /* Mantener apretado abre las variantes también acá: el gesto
+                   es de la card entera, no de cada pedazo. Un toque corto sí
+                   hace lo suyo — vender el 2x1. */
                 <button
                   className="promo-btn"
-                  onClick={() => handlePromo(p)}
+                  onPointerDown={() => startPress(p)}
+                  onPointerUp={endPress}
+                  onPointerLeave={endPress}
+                  onPointerCancel={endPress}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onClick={() => {
+                    if (longFired.current) return
+                    handlePromo(p)
+                  }}
                   aria-label={`Vender dos ${p.name} a ${p.promoPrice}`}
                 >
                   2×1
