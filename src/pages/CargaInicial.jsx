@@ -224,7 +224,7 @@ export default function CargaInicial() {
       {dialog?.kind === 'reset' && (
         <Dialog
           title="¿Volver a los datos de ejemplo?"
-          sub="Se borra todo lo que registraste mientras probabas."
+          sub="Se borra todo lo que hayas registrado mientras probabas."
           confirmLabel="Resetear"
           danger
           onConfirm={() => { resetDemoData(); setDialog(null) }}
@@ -296,7 +296,7 @@ export default function CargaInicial() {
       {dialog?.kind === 'promo' && (
         <Dialog
           title={`2x1 de ${dialog.product.name}`}
-          sub={`¿Cuánto se cobran los dos juntos? Sueltos salen $${dialog.product.salePrice.toLocaleString('es-AR')} cada uno. Vacío saca la promo.`}
+          sub={`¿Cuánto se cobran los dos juntos? Por separado salen $${dialog.product.salePrice.toLocaleString('es-AR')} cada uno. Vacío saca la promo.`}
           input={{
             type: 'number',
             inputMode: 'decimal',

@@ -147,13 +147,13 @@ export default function Venta({ activeEvent }) {
         <div className="empty-state">
           <span className="em"><BoxIcon /></span>
           <div className="big">Todavía no cargaste productos</div>
-          <div>Andá a la pestaña Stock para empezar.</div>
+          <div>Ve a la pestaña Stock para empezar.</div>
         </div>
       )}
 
       {products.length > 0 && (
         <div className="hint-row">
-          Un toque vende · mantené apretado para otro precio o regalo
+          Toca para vender · mantén para opciones
         </div>
       )}
 

@@ -16,7 +16,7 @@ export default function Pendiente() {
 
       <p className="pendiente-sub">
         Entraste como <strong>{user?.email}</strong> y ya quedaste en la lista del
-        equipo. Pedile a quien administra el bar que te habilite: hasta entonces
+        equipo. Pide a quien administra el bar que te habilite: hasta entonces
         no vas a poder registrar ventas ni ver el resto.
       </p>
 

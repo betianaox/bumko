@@ -115,7 +115,7 @@ export default function Usuarios() {
                 <div className="user-main">
                   <div className="user-name">
                     {u.name || u.email}
-                    {soyYo(u) && <span className="you">vos</span>}
+                    {soyYo(u) && <span className="you">tú</span>}
                   </div>
                   <div className="user-mail">{u.email || u.id}</div>
                   {u.createdAt && <div className="user-fechas">Entró: {fecha(u.createdAt)}</div>}
@@ -164,7 +164,7 @@ export default function Usuarios() {
       {dialog && (
         <Dialog
           title={`¿Sacar a ${dialog.user.name || dialog.user.email}?`}
-          sub="Pierde el acceso al bar. Si vuelve a entrar por el link, queda otra vez a la espera de que la habilites."
+          sub="Pierde el acceso al bar. Si vuelve a entrar por el link, queda otra vez a la espera de que lo habiliten."
           confirmLabel="Sacar del equipo"
           danger
           onConfirm={handleRemove}

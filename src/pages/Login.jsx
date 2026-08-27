@@ -13,7 +13,7 @@ export default function Login() {
 
       {loading ? null : !user ? (
         <>
-          <p className="login-sub">Control de stock. Entrá con tu cuenta de Google del equipo.</p>
+          <p className="login-sub">Control de stock. Entra con tu cuenta de Google del equipo.</p>
           <button className="google-btn" onClick={signIn}>
             <GoogleIcon />
             Iniciar sesión con Google
@@ -24,7 +24,7 @@ export default function Login() {
         <>
           <div className="wait-badge">Esperando aprobación</div>
           <p className="login-sub">
-            Ya quedaste anotado como <strong>{user.email}</strong>. Pedile a quien
+            Ya quedaste anotado como <strong>{user.email}</strong>. Pide a quien
             administra el bar que te habilite: hasta entonces no vas a poder
             registrar nada.
           </p>
@@ -37,7 +37,7 @@ export default function Login() {
         <>
           <p className="login-sub">
             Entraste como <strong>{user.email}</strong>, pero ese mail no está en
-            ningún bar. Pedile a quien administra el tuyo que te sume con esa
+            ningún bar. Pide a quien administra el tuyo que te sume con esa
             misma dirección.
           </p>
           <button className="google-btn" onClick={signOut}>Probar con otra cuenta</button>

@@ -190,7 +190,7 @@ export default function Eventos({ activeEvent }) {
       {confirmStop && activeEvent && (
         <Dialog
           title="Cerrar la noche"
-          sub={`Contá la caja y poné cuánto hay. Según lo registrado tendría que haber ${money(esperado)}.`}
+          sub={`Cuenta la caja y escribe cuánto hay. Según lo registrado tendría que haber ${money(esperado)}.`}
           input={{ type: 'number', inputMode: 'numeric', initial: String(esperado) }}
           confirmLabel="Cerrar evento"
           danger
