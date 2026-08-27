@@ -27,6 +27,7 @@ function useTokens() {
       c1: leer('--c1'),
       c2: leer('--c2'),
       c3: leer('--c3'),
+      c4: leer('--c4'),
       texto: leer('--text'),
       tenue: leer('--text-faint'),
       linea: leer('--line'),
@@ -174,7 +175,7 @@ export function Composicion({ title, parts }) {
   const total = parts.reduce((s, p) => s + p.value, 0)
   if (total === 0 || !t.c1) return null
 
-  const color = { c1: t.c1, c2: t.c2, c3: t.c3 }
+  const color = { c1: t.c1, c2: t.c2, c3: t.c3, c4: t.c4 }
 
   return (
     <div className="chart-card">

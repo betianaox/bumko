@@ -57,21 +57,25 @@ export default function Venta({ activeEvent }) {
   }
 
   const registerSale = async (product, saleData) => {
-    flash(product.id, saleData.mode === 'gift' ? 'REGALO' : '−1')
+    // Un 2x1 saca dos del stock; todo lo demás, una
+    const cuantas = saleData.qty || 1
+
+    flash(product.id, saleData.mode === 'gift' ? 'REGALO' : `−${cuantas}`)
 
     // El stock primero: es lo que ve el resto del equipo en sus pantallas
-    await updateDoc(barDoc(barId, 'products', product.id), { stock: increment(-1) })
+    await updateDoc(barDoc(barId, 'products', product.id), { stock: increment(-cuantas) })
 
     const saleDoc = await addDoc(barCol(barId, 'sales'), {
       productId: product.id,
       productName: product.name,
       mode: saleData.mode,
       amount: saleData.amount,
+      qty: cuantas,
       /* El costo se copia acá y no se busca después en el producto: si mañana
          cambia el precio de compra, las noches ya cerradas tienen que seguir
          diciendo lo que dijeron. Lo mismo vale para un regalo, que cuesta
          igual aunque no se haya cobrado. */
-      costPrice: product.costPrice || 0,
+      costPrice: (product.costPrice || 0) * cuantas,
       reason: saleData.reason || null,
       who: saleData.who || null,
       eventId: activeEvent ? activeEvent.id : null,
@@ -90,6 +94,7 @@ export default function Venta({ activeEvent }) {
         productName: product.name,
         mode: saleData.mode,
         amount: saleData.amount,
+        qty: cuantas,
         at: Date.now(),
       },
       ...prev,
@@ -100,6 +105,12 @@ export default function Venta({ activeEvent }) {
   const handleQuickSale = (product) => {
     buzz(30)
     registerSale(product, { mode: 'regular', amount: product.salePrice })
+  }
+
+  // El 2x1: dos unidades por el precio de la promo, de un toque
+  const handlePromo = (product) => {
+    buzz([30, 40, 30])
+    registerSale(product, { mode: 'promo', amount: product.promoPrice, qty: 2 })
   }
 
   const handleConfirmSale = (saleData) => {
@@ -113,7 +124,8 @@ export default function Venta({ activeEvent }) {
     setConfirmUndo(null)
     setRecent((prev) => prev.filter((r) => r.saleId !== entry.saleId))
     buzz([20, 40, 20])
-    await updateDoc(barDoc(barId, 'products', entry.productId), { stock: increment(1) })
+    // Devuelve lo mismo que sacó: un 2x1 repone dos
+    await updateDoc(barDoc(barId, 'products', entry.productId), { stock: increment(entry.qty || 1) })
     await deleteDoc(barDoc(barId, 'sales', entry.saleId))
   }
 
@@ -150,27 +162,45 @@ export default function Venta({ activeEvent }) {
           const low = p.lowStockThreshold != null && p.stock <= p.lowStockThreshold && p.stock > 0
           const out = p.stock <= 0
           const mine = flashes.filter((f) => f.productId === p.id)
+          // Con una sola unidad no se puede hacer un 2x1
+          const conPromo = p.promoPrice > 0 && p.stock >= 2
+
           return (
-            <button
-              key={p.id}
-              className={'punch ' + (out ? 'out' : `${toneOf(p)}${low ? ' low' : ''}`)}
-              onPointerDown={() => !out && startPress(p)}
-              onPointerUp={endPress}
-              onPointerLeave={endPress}
-              onPointerCancel={endPress}
-              onContextMenu={(e) => e.preventDefault()}
-              onClick={() => {
-                if (longFired.current || out) return
-                handleQuickSale(p)
-              }}
-            >
-              <span className="stock-badge">{p.stock}</span>
-              <span className="name">{p.name}</span>
-              <span className="price">${p.salePrice.toLocaleString('es-AR')}</span>
-              {mine.map((f) => (
-                <span key={f.id} className={'flash' + (f.label === 'REGALO' ? ' gift' : '')}>{f.label}</span>
-              ))}
-            </button>
+            /* El 2x1 va como botón aparte encima de la card y no adentro:
+               un botón dentro de otro no es HTML válido, y además así el
+               toque en la promo no dispara la venta suelta. */
+            <div className="punch-wrap" key={p.id}>
+              <button
+                className={'punch ' + (out ? 'out' : `${toneOf(p)}${low ? ' low' : ''}`)}
+                onPointerDown={() => !out && startPress(p)}
+                onPointerUp={endPress}
+                onPointerLeave={endPress}
+                onPointerCancel={endPress}
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => {
+                  if (longFired.current || out) return
+                  handleQuickSale(p)
+                }}
+              >
+                <span className="stock-badge">{p.stock}</span>
+                <span className="name">{p.name}</span>
+                <span className="price">${p.salePrice.toLocaleString('es-AR')}</span>
+                {mine.map((f) => (
+                  <span key={f.id} className={'flash' + (f.label === 'REGALO' ? ' gift' : '')}>{f.label}</span>
+                ))}
+              </button>
+
+              {conPromo && (
+                <button
+                  className="promo-btn"
+                  onClick={() => handlePromo(p)}
+                  aria-label={`Vender dos ${p.name} a ${p.promoPrice}`}
+                >
+                  2×1
+                  <span className="promo-precio">${p.promoPrice.toLocaleString('es-AR')}</span>
+                </button>
+              )}
+            </div>
           )
         })}
       </div>
@@ -194,7 +224,7 @@ export default function Venta({ activeEvent }) {
                 className={
                   'recent-chip' +
                   (confirming ? ' confirming' : '') +
-                  (r.mode === 'gift' ? ' gift' : r.mode === 'custom' ? ' custom' : '')
+                  (r.mode === 'gift' ? ' gift' : r.mode === 'custom' ? ' custom' : r.mode === 'promo' ? ' promo' : '')
                 }
                 onClick={() => (confirming ? handleUndo(r) : setConfirmUndo(r.saleId))}
               >
@@ -203,7 +233,9 @@ export default function Venta({ activeEvent }) {
                 ) : (
                   <>
                     <span className="rn">{r.productName}</span>
-                    <span className="rv">{r.mode === 'gift' ? 'regalo' : '−1'}</span>
+                    <span className="rv">
+                      {r.mode === 'gift' ? 'regalo' : r.mode === 'promo' ? '2x1' : '−1'}
+                    </span>
                   </>
                 )}
               </button>

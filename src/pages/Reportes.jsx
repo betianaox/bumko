@@ -106,25 +106,29 @@ export default function Reportes() {
       if (!map[b.key]) {
         map[b.key] = {
           label: b.label, sub: b.sub, sort: b.sort,
-          total: 0, costo: 0, count: 0, gifts: 0, customs: 0,
+          total: 0, costo: 0, count: 0, gifts: 0, customs: 0, promos: 0,
           giftReasons: {}, products: {}, users: {},
         }
       }
+      // Un 2x1 es un registro con dos unidades adentro
+      const cuantas = s.qty || 1
+
       const g = map[b.key]
       g.total += s.amount || 0
       // Lo que salió cuesta igual aunque se haya regalado: el costo suma
       // siempre, sin mirar cómo salió la unidad.
       g.costo += s.costPrice || 0
-      g.count += 1
+      g.count += cuantas
       if (s.mode === 'gift') {
-        g.gifts += 1
+        g.gifts += cuantas
         const r = s.reason || 'Otro'
-        g.giftReasons[r] = (g.giftReasons[r] || 0) + 1
+        g.giftReasons[r] = (g.giftReasons[r] || 0) + cuantas
       }
-      if (s.mode === 'custom') g.customs += 1
-      g.products[s.productName] = (g.products[s.productName] || 0) + 1
+      if (s.mode === 'custom') g.customs += cuantas
+      if (s.mode === 'promo') g.promos += cuantas
+      g.products[s.productName] = (g.products[s.productName] || 0) + cuantas
       const quien = s.userName || s.userEmail || 'Sin identificar'
-      g.users[quien] = (g.users[quien] || 0) + 1
+      g.users[quien] = (g.users[quien] || 0) + cuantas
     }
 
     // Más reciente arriba; los grupos sin fecha/evento (sort vacío) van al fondo.
@@ -134,17 +138,23 @@ export default function Reportes() {
   /* Los gráficos miran todo el período filtrado junto, no grupo por grupo:
      la pregunta ahí es "cómo viene el mes", no "qué pasó el martes". */
   const resumen = useMemo(() => {
-    const total = { plata: 0, costo: 0, unidades: 0, regalos: 0, especiales: 0, productos: {}, gente: {} }
+    const total = {
+      plata: 0, costo: 0, unidades: 0,
+      regalos: 0, especiales: 0, promos: 0,
+      productos: {}, gente: {},
+    }
 
     for (const s of filtered) {
+      const cuantas = s.qty || 1
       total.plata += s.amount || 0
       total.costo += s.costPrice || 0
-      total.unidades += 1
-      if (s.mode === 'gift') total.regalos += 1
-      if (s.mode === 'custom') total.especiales += 1
-      total.productos[s.productName] = (total.productos[s.productName] || 0) + 1
+      total.unidades += cuantas
+      if (s.mode === 'gift') total.regalos += cuantas
+      if (s.mode === 'custom') total.especiales += cuantas
+      if (s.mode === 'promo') total.promos += cuantas
+      total.productos[s.productName] = (total.productos[s.productName] || 0) + cuantas
       const quien = s.userName || s.userEmail || 'Sin identificar'
-      total.gente[quien] = (total.gente[quien] || 0) + 1
+      total.gente[quien] = (total.gente[quien] || 0) + cuantas
     }
 
     // La serie va al revés que el listado: en el tiempo se lee de izquierda a derecha
@@ -164,7 +174,7 @@ export default function Reportes() {
       serie,
       topProductos: ranking(total.productos, 8),
       topGente: ranking(total.gente, 8),
-      regulares: total.unidades - total.regalos - total.especiales,
+      regulares: total.unidades - total.regalos - total.especiales - total.promos,
     }
   }, [filtered, groups, mode])
 
@@ -335,9 +345,10 @@ export default function Reportes() {
               </div>
             </div>
 
-            {(g.customs > 0 || g.gifts > 0) && (
+            {(g.customs > 0 || g.gifts > 0 || g.promos > 0) && (
               <div className="event-meta" style={{ marginTop: 10, marginBottom: 0 }}>
-                {g.count - g.gifts - g.customs} al precio regular
+                {g.count - g.gifts - g.customs - g.promos} al precio regular
+                {g.promos > 0 && ` · ${g.promos} en 2x1`}
                 {g.customs > 0 && ` · ${g.customs} con precio especial`}
                 {g.gifts > 0 && ` · ${g.gifts} regaladas`}
               </div>

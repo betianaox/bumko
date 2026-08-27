@@ -16,6 +16,7 @@ export default function CargaInicial() {
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
   const [threshold, setThreshold] = useState('')
+  const [promo, setPromo] = useState('')
   const [tone, setTone] = useState(null)
   const [editingTone, setEditingTone] = useState(null)
   const [dialog, setDialog] = useState(null)      // { kind: 'restock' | 'delete', product }
@@ -32,10 +33,13 @@ export default function CargaInicial() {
       salePrice: Number(price),
       stock: Number(stock),
       lowStockThreshold: threshold === '' ? 5 : Number(threshold),
+      // Precio de los dos juntos. Sin precio no hay 2x1: el botón de la
+      // pantalla de venta aparece solo si este número existe.
+      promoPrice: promo === '' ? null : Number(promo),
       tone,
       visible: true,
     })
-    setName(''); setCost(''); setPrice(''); setStock(''); setThreshold(''); setTone(null)
+    setName(''); setCost(''); setPrice(''); setStock(''); setThreshold(''); setPromo(''); setTone(null)
   }
 
   const handleRestock = async (value) => {
@@ -52,6 +56,16 @@ export default function CargaInicial() {
     const p = dialog.product
     setDialog(null)
     await deleteDoc(barDoc(barId, 'products', p.id))
+  }
+
+  /* La promo es el precio: sin precio no hay 2x1, así que vaciar el campo la
+     apaga y no hace falta un interruptor aparte. */
+  const handlePromo = async (value) => {
+    const p = dialog.product
+    const n = value === '' ? null : Number(value)
+    setDialog(null)
+    if (n !== null && Number.isNaN(n)) return
+    await updateDoc(barDoc(barId, 'products', p.id), { promoPrice: n })
   }
 
   const toggleVisible = async (p) => {
@@ -77,6 +91,9 @@ export default function CargaInicial() {
         <div className="form-row">
           <input className="small" placeholder="Stock inicial" type="number" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} />
           <input className="small" placeholder="Alerta stock" type="number" inputMode="numeric" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
+        </div>
+        <div className="form-row">
+          <input placeholder="2x1 $ (los dos juntos, opcional)" type="number" inputMode="decimal" value={promo} onChange={(e) => setPromo(e.target.value)} />
         </div>
 
         <div className="field-label">Color del botón</div>
@@ -118,6 +135,15 @@ export default function CargaInicial() {
                 </div>
               </div>
               <div className="row-actions">
+                {/* El 2x1 se prende y se apaga durante la noche, así que se
+                    edita desde acá y no hay que volver a cargar el producto. */}
+                <button
+                  className={'promo-tag' + (p.promoPrice ? ' on' : '')}
+                  aria-label={`Precio 2x1 de ${p.name}`}
+                  onClick={() => setDialog({ kind: 'promo', product: p })}
+                >
+                  2×1
+                </button>
                 <button
                   className="icon-btn"
                   aria-label={`Sumar stock a ${p.name}`}
@@ -163,6 +189,21 @@ export default function CargaInicial() {
           confirmLabel="Resetear"
           danger
           onConfirm={() => { resetDemoData(); setDialog(null) }}
+          onClose={() => setDialog(null)}
+        />
+      )}
+
+      {dialog?.kind === 'promo' && (
+        <Dialog
+          title={`2x1 de ${dialog.product.name}`}
+          sub={`¿Cuánto se cobran los dos juntos? Sueltos salen $${dialog.product.salePrice.toLocaleString('es-AR')} cada uno. Vacío saca la promo.`}
+          input={{
+            type: 'number',
+            inputMode: 'decimal',
+            initial: dialog.product.promoPrice ? String(dialog.product.promoPrice) : '',
+          }}
+          confirmLabel="Guardar"
+          onConfirm={handlePromo}
           onClose={() => setDialog(null)}
         />
       )}

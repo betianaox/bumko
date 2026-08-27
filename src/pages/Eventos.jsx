@@ -82,7 +82,7 @@ export default function Eventos({ activeEvent }) {
         vendido: recaudado,
         costo: costoTotal,
         resultado: recaudado - costoTotal,
-        unidades: liveSales.length,
+        unidades,
         regalados,
       },
     })
@@ -97,7 +97,13 @@ export default function Eventos({ activeEvent }) {
 
   const recaudado = liveSales.reduce((sum, s) => sum + (s.amount || 0), 0)
   const costoTotal = liveSales.reduce((sum, s) => sum + (s.costPrice || 0), 0)
-  const regalados = liveSales.filter((s) => s.mode === 'gift').length
+
+  // Un 2x1 son dos unidades en un solo registro: lo que se cuenta son unidades
+  const cuantas = (s) => s.qty || 1
+  const unidades = liveSales.reduce((sum, s) => sum + cuantas(s), 0)
+  const regalados = liveSales
+    .filter((s) => s.mode === 'gift')
+    .reduce((sum, s) => sum + cuantas(s), 0)
   const inicial = activeEvent?.openingCash || 0
   const esperado = inicial + recaudado
 
@@ -124,7 +130,7 @@ export default function Eventos({ activeEvent }) {
           </div>
 
           <div className="event-meta" style={{ marginTop: 10 }}>
-            {liveSales.length} salieron · {regalados} regalados
+            {unidades} salieron · {regalados} regalados
           </div>
 
           {editingCash === null ? (
