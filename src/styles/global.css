@@ -1677,6 +1677,18 @@ input::placeholder { color: var(--text-faint); }
 
 .event-card.active .event-name { color: var(--green-ink); }
 
+/* El pie de la tarjeta: el arqueo se estira y el tacho queda a la derecha, en
+   el mismo renglón. Sin arqueo el botón queda solo, igual pegado a la derecha. */
+.event-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.event-foot .arqueo { flex: 1; margin-top: 0; }
+
 /* Adentro de la tarjeta verde nada vuelve al gris: los recuadros y los
    botones se tiñen del mismo color, más o menos cargado. */
 .event-card.active .stat-box { background: rgba(var(--green-rgb), 0.15); }
@@ -1700,7 +1712,7 @@ input::placeholder { color: var(--text-faint); }
 .event-name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: -0.02em;
 }
 

@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
-import { addDoc, updateDoc, serverTimestamp } from '../data'
+import { addDoc, updateDoc, deleteDoc, serverTimestamp } from '../data'
 import { useAuth } from '../context/AuthContext'
 import { barCol, barDoc } from '../bar'
 import { useBar } from '../store'
 import Dialog from '../components/Dialog'
-import { PlayIcon, StopIcon } from '../components/icons'
+import { PlayIcon, StopIcon, TrashIcon } from '../components/icons'
 
 const money = (n) => '$' + (n || 0).toLocaleString('es-AR')
+
+/* Borrar el evento no borra sus ventas, así que el cartel lo dice: lo que se
+   pierde es la agrupación, no la plata. */
+function textoBorrar(n) {
+  if (n === 0) return 'No tiene ventas registradas: se borra solo el evento.'
+  if (n === 1) return 'Su única venta queda en el historial, suelta y sin evento. La plata registrada no cambia.'
+  return `Sus ${n} ventas quedan en el historial, sueltas y sin evento. La plata registrada no cambia.`
+}
 
 const CAJA_SUGERIDA = 0   // arranca en cero: el número lo pone quien cuenta la caja
 
@@ -21,11 +29,12 @@ function nombreSugerido(d = new Date()) {
 }
 
 export default function Eventos({ activeEvent }) {
-  const { barId } = useAuth()
+  const { barId, isAdmin } = useAuth()
   const [newName, setNewName] = useState(nombreSugerido)
   const [openingCash, setOpeningCash] = useState(String(CAJA_SUGERIDA))
   const [editingCash, setEditingCash] = useState(null)
   const [confirmStop, setConfirmStop] = useState(false)
+  const [borrar, setBorrar] = useState(null)   // evento cerrado que se está por borrar
 
   const { items: events } = useBar((e) => e.eventos)
   const { items: ventas } = useBar((e) => e.ventas)
@@ -86,6 +95,21 @@ export default function Eventos({ activeEvent }) {
         regalados,
       },
     })
+  }
+
+  /* Borrar un evento cerrado. Las ventas no se tocan: son plata que entró y
+     mercadería que salió, y el reporte del mes tiene que seguir cerrando igual.
+     Lo que se limpia es la referencia — quedan como ventas sueltas, "Sin
+     evento" — para no dejar apuntando a un documento que ya no existe. */
+  const handleDelete = async () => {
+    const ev = borrar
+    setBorrar(null)
+
+    const suyas = ventas.filter((s) => s.eventId === ev.id)
+    await Promise.all(
+      suyas.map((s) => updateDoc(barDoc(barId, 'sales', s.id), { eventId: null }))
+    )
+    await deleteDoc(barDoc(barId, 'events', ev.id))
   }
 
   const handleSaveCash = async () => {
@@ -199,6 +223,17 @@ export default function Eventos({ activeEvent }) {
         />
       )}
 
+      {borrar && (
+        <Dialog
+          title={`¿Borrar ${borrar.name}?`}
+          sub={textoBorrar(ventas.filter((s) => s.eventId === borrar.id).length)}
+          confirmLabel="Borrar evento"
+          danger
+          onConfirm={handleDelete}
+          onClose={() => setBorrar(null)}
+        />
+      )}
+
       <div className="section-title">Eventos anteriores</div>
       {events.filter((e) => e.status === 'closed').map((e) => {
         // La diferencia solo existe si alguien contó la caja al cerrar
@@ -237,16 +272,29 @@ export default function Eventos({ activeEvent }) {
               </>
             )}
 
-            {/* El arqueo: qué había contra qué tenía que haber */}
-            {dif !== null && (
-              <div className={'arqueo' + (dif === 0 ? ' ok' : dif > 0 ? ' sobra' : ' falta')}>
-                {dif === 0
-                  ? `Caja justa: ${money(e.countedCash)}`
-                  : dif > 0
-                    ? `Sobraron ${money(dif)} — contaste ${money(e.countedCash)} de ${money(e.expectedCash)}`
-                    : `Faltaron ${money(-dif)} — contaste ${money(e.countedCash)} de ${money(e.expectedCash)}`}
-              </div>
-            )}
+            {/* El arqueo (qué había contra qué tenía que haber) y el borrar
+                comparten renglón: el pie de la tarjeta es la zona de cierre,
+                y el tacho no se cruza con los números. */}
+            <div className="event-foot">
+              {dif !== null && (
+                <div className={'arqueo' + (dif === 0 ? ' ok' : dif > 0 ? ' sobra' : ' falta')}>
+                  {dif === 0
+                    ? `Caja total: ${money(e.countedCash)}`
+                    : dif > 0
+                      ? `Sobraron ${money(dif)} — contaste ${money(e.countedCash)} de ${money(e.expectedCash)}`
+                      : `Faltaron ${money(-dif)} — contaste ${money(e.countedCash)} de ${money(e.expectedCash)}`}
+                </div>
+              )}
+              {isAdmin && (
+                <button
+                  className="icon-btn danger"
+                  onClick={() => setBorrar(e)}
+                  aria-label={`Borrar ${e.name}`}
+                >
+                  <TrashIcon />
+                </button>
+              )}
+            </div>
           </div>
         )
       })}
