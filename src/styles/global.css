@@ -85,6 +85,7 @@
 
   --invert-bg: #ffffff;
   --invert-ink: #0b0b10;
+  --invert-bg-80: rgba(255, 255, 255, 0.8);
 
   /* Colores para escribir, no para rellenar: el de relleno casi nunca sirve
      como texto, y menos cambiando de tema. */
@@ -119,6 +120,7 @@
 
   --invert-bg: #14141c;
   --invert-ink: #ffffff;
+  --invert-bg-80: rgba(20, 20, 28, 0.8);
 
   --green-ink: #157a3a;
   --amber-ink: #8a5a00;
@@ -396,13 +398,13 @@ input::placeholder { color: var(--text-faint); }
 .punch-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 13px;
 }
 
 @media (min-width: 500px) {
   .punch-grid {
     grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
-    gap: 20px;
+    gap: 15px;
   }
 }
 
@@ -425,7 +427,8 @@ input::placeholder { color: var(--text-faint); }
   line-height: 1;
   padding: 9px 10px;
   border-radius: 100px;
-  background: var(--invert-bg);
+  /* Translúcido: en blanco pleno tapaba la card en vez de apoyarse encima */
+  background: var(--invert-bg-80);
   color: var(--invert-ink);
   font-family: var(--font-display);
   font-weight: 700;
