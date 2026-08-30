@@ -2,6 +2,10 @@ rules_version = '2';
 
 // Cada bar es una cuenta cerrada: nadie de otro bar ve ni toca sus datos.
 // usuarios/{email} dice a qué bar entra cada persona.
+//
+// Estas reglas valen para los dos clientes: la web de este repo y la app
+// nativa de ../bumkoapp. Van juntas a propósito — son las mismas colecciones y
+// hay un solo lugar donde se decide quién puede qué.
 service cloud.firestore {
   match /databases/{database}/documents {
     function yo() { return request.auth.token.email; }
@@ -10,18 +14,52 @@ service cloud.firestore {
     function esDev(b) { return delBar(b) && miembro(b).role == 'dev'; }
     // dev puede lo mismo que admin: es mantenimiento, no negocio
     function esAdmin(b) { return delBar(b) && (miembro(b).role == 'admin' || miembro(b).role == 'dev'); }
-    // Puerta abierta: se anota solo el que llega por el link, siempre como staff.
-    function abierta(b) { return get(/databases/$(database)/documents/bares/$(b)).data.autoJoin == true; }
+    function elBar(b) { return get(/databases/$(database)/documents/bares/$(b)).data; }
+    // Puerta abierta: se anota solo el que llega con el código, siempre staff.
+    function abierta(b) { return elBar(b).autoJoin == true; }
+    // Quien acaba de crear el bar todavía no está en el equipo, así que
+    // durante esas dos escrituras es el documento del bar el que lo acredita.
+    function esDueno(b) { return request.auth != null && elBar(b).ownerEmail == yo(); }
+    // ¿Le dejaron una carta en la puerta?
+    function invitado(b, email) { return exists(/databases/$(database)/documents/invitaciones/$(email)/pendientes/$(b)); }
 
     match /usuarios/{email} {
       allow read: if request.auth != null && yo() == email;
-      allow create: if request.auth != null && yo() == email && abierta(request.resource.data.barId);
+      // El índice se escribe al final de cada camino de entrada, y solo por
+      // uno que ya recorrió el camino: creó el bar, tenía invitación, entró
+      // por la puerta abierta, o ya lo metieron al equipo.
+      allow create: if request.auth != null && yo() == email && (
+        esDueno(request.resource.data.barId)
+        || invitado(request.resource.data.barId, email)
+        || abierta(request.resource.data.barId)
+        || exists(/databases/$(database)/documents/bares/$(request.resource.data.barId)/equipo/$(email))
+      );
       allow write: if request.auth != null && esAdmin(request.resource.data.get('barId', resource.data.barId));
+    }
+
+    /* La bandeja de invitaciones, colgada del correo y no del bar. Es el único
+       lugar donde alguien que todavía no pertenece a ningún lado puede
+       encontrar lo que le dejaron, con una lectura de un solo documento. */
+    match /invitaciones/{email}/pendientes/{b} {
+      allow read: if request.auth != null && yo() == email;
+      allow create: if esAdmin(b);
+      // La borra el admin que se arrepiente, o la persona al aceptar o rechazar
+      allow delete: if esAdmin(b) || (request.auth != null && yo() == email);
+    }
+
+    /* El código corto de cada bar. Se puede leer con sesión iniciada: es lo que
+       permite resolver "BUMK4T" a un bar antes de pertenecer a él. Lo único
+       que revela es el nombre del bar, que es justamente lo que hay que
+       mostrarle a quien está por pedir entrar. */
+    match /codigos/{codigo} {
+      allow read: if request.auth != null;
+      allow create: if esAdmin(request.resource.data.barId);
+      allow update, delete: if esAdmin(resource.data.barId);
     }
 
     match /bares/{b} {
       // Cualquiera con sesión puede leer el bar: hace falta para saber si tiene
-      // la puerta abierta antes de pertenecer a él. Son tres campos públicos.
+      // la puerta abierta antes de pertenecer a él.
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.resource.data.ownerEmail == yo();
       allow update, delete: if esAdmin(b);
@@ -30,9 +68,20 @@ service cloud.firestore {
         // El propio registro se lee siempre, aunque esté suspendido: si no, la
         // persona no puede ni enterarse de que está esperando aprobación.
         allow read: if delBar(b) || (request.auth != null && yo() == email);
-        // Anotarse solo: siempre staff y siempre apagado, lo habilita un admin
-        allow create: if request.auth != null && yo() == email && abierta(b)
-          && request.resource.data.role == 'staff' && request.resource.data.active == false;
+
+        // Los tres caminos por los que uno se anota a sí mismo.
+        allow create: if request.auth != null && yo() == email && (
+          // Acaba de crear el bar: entra como admin, es el suyo.
+          esDueno(b)
+          // Acepta una invitación: entra activo, porque ya lo eligieron a mano.
+          // Un dev no se nombra por invitación.
+          || (invitado(b, email) && request.resource.data.role != 'dev')
+          // Puerta abierta: siempre staff y siempre apagado, lo habilita un admin.
+          || (abierta(b) && request.resource.data.role == 'staff' && request.resource.data.active == false)
+        );
+        // Un admin sumando a alguien: es lo que pasa al aceptar una solicitud.
+        allow create: if esAdmin(b) && (request.resource.data.role != 'dev' || esDev(b));
+
         // Cada uno puede poner al día su nombre y su foto — y nada más: el rol
         // y el acceso no se tocan a sí mismos.
         allow update: if request.auth != null && yo() == email
@@ -40,6 +89,22 @@ service cloud.firestore {
         // Nombrar o destituir devs es cosa de devs
         allow update: if esAdmin(b) && (request.resource.data.role != 'dev' || esDev(b)) && (resource.data.role != 'dev' || esDev(b));
         allow delete: if esAdmin(b) && (resource.data.role != 'dev' || esDev(b));
+      }
+
+      /* La copia de la invitación que ve el admin. Sin esto tendría que buscar
+         entre las bandejas de todos los correos del mundo para saber a quién
+         invitó. */
+      match /invitaciones/{email} {
+        allow read, write: if esAdmin(b);
+      }
+
+      /* Quien llegó con el código y pide entrar. Puede dejar su pedido y
+         retirarlo, y nada más: no lee la lista ni ve nada del bar. */
+      match /solicitudes/{email} {
+        allow read: if esAdmin(b) || (request.auth != null && yo() == email);
+        allow create: if request.auth != null && yo() == email
+          && request.resource.data.email == email;
+        allow delete: if esAdmin(b) || (request.auth != null && yo() == email);
       }
 
       // El staff solo puede mover el stock; los demás campos son del admin.
